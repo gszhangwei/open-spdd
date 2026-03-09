@@ -1,0 +1,48 @@
+# IDE
+.idea/
+*.iml
+.vscode/
+
+# Go binaries
+*.exe
+*.exe~
+*.dll
+*.so
+*.dylib
+open-spdd
+openspdd
+spdd-cli
+spdd/open-spdd
+
+# GoReleaser
+dist/
+
+# Go test and coverage
+*.test
+*.out
+coverage.html
+coverage.txt
+
+# Go vendor (if not using vendoring)
+# vendor/
+
+# OS generated files
+.DS_Store
+.DS_Store?
+._*
+.Spotlight-V100
+.Trashes
+Thumbs.db
+
+# Logs
+*.log
+
+# Environment files
+.env
+.env.local
+.env.*.local
+
+# Temporary files
+*.tmp
+*.temp
+*~
