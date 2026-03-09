@@ -43,11 +43,11 @@ changelog:
 brews:
   - name: openspdd
     repository:
-      owner: YOUR_GITHUB_USERNAME
-      name: homebrew-tap
+      owner: gszhangwei
+      name: homebrew-tools
       token: "{{ .Env.HOMEBREW_TAP_GITHUB_TOKEN }}"
     directory: Formula
-    homepage: "https://github.com/YOUR_GITHUB_USERNAME/open-spdd"
+    homepage: "https://github.com/gszhangwei/open-spdd"
     description: "AI Coding Assistant Command Template Manager"
     license: "MIT"
     install: |
