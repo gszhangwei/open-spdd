@@ -1,3 +1,10 @@
+---
+name: copilot-instructions
+id: copilot-instructions
+category: Configuration
+description: GitHub Copilot instruction file with SPDD workflow references
+---
+
 # SPDD Framework for GitHub Copilot
 
 This project uses the SPDD (Structured Prompt-Driven Development) methodology for AI-assisted development.
