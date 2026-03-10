@@ -1,10 +1,10 @@
 # OpenSPDD
 
-AI Coding Assistant Command Template Manager - A CLI tool for managing command templates across Cursor, Claude Code, and Antigravity environments.
+AI Coding Assistant Command Template Manager - A CLI tool for managing command templates across Cursor, Claude Code, Antigravity, and GitHub Copilot environments.
 
 ## Features
 
-- **Auto-detection**: Automatically detects your AI coding environment (Cursor, Claude Code, Antigravity)
+- **Auto-detection**: Automatically detects your AI coding environment (Cursor, Claude Code, Antigravity, GitHub Copilot)
 - **Template Management**: Embedded templates distributed via a single binary
 - **Interactive UI**: Modern terminal UI for template selection
 - **Cross-platform**: Supports macOS, Linux, and Windows
@@ -97,6 +97,7 @@ openspdd generate --output ./my-commands spdd-generate
 openspdd --tool cursor <command>
 openspdd --tool claude-code <command>
 openspdd --tool antigravity <command>
+openspdd --tool github-copilot <command>
 ```
 
 ## Supported Environments
@@ -106,6 +107,22 @@ openspdd --tool antigravity <command>
 | Cursor | `.cursor/`, `.cursorrules` | `.cursor/commands/` |
 | Claude Code | `.claude/`, `CLAUDE.md` | `.claude/commands/` |
 | Antigravity | `.antigravity/` | `.antigravity/commands/` |
+| GitHub Copilot | `.github/` | `.github/copilot-prompts/` |
+
+### GitHub Copilot File Structure
+
+For GitHub Copilot, OpenSPDD generates a different file structure:
+
+```
+.github/
+├── copilot-instructions.md     # Main instruction file (auto-merged with markers)
+└── copilot-prompts/
+    ├── spdd-reasons-canvas.md  # REASONS-Canvas workflow
+    ├── spdd-generate.md        # Code generation workflow
+    └── spdd-sync.md            # Sync workflow
+```
+
+The `copilot-instructions.md` file uses marker-based merging (`<!-- openspdd:start -->` and `<!-- openspdd:end -->`) to preserve any custom content you add outside the marked section.
 
 ## Available Templates
 

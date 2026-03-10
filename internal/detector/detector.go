@@ -33,7 +33,7 @@ func (d *DefaultDetector) Detect(workingDir string) DetectResult {
 		}
 	}
 
-	toolTypes := []AIToolType{Cursor, ClaudeCode, Antigravity}
+	toolTypes := []AIToolType{Cursor, ClaudeCode, Antigravity, GitHubCopilot}
 
 	for _, tool := range toolTypes {
 		signatures := tool.GetSignatureFiles()

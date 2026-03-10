@@ -4,10 +4,11 @@ package detector
 type AIToolType string
 
 const (
-	Cursor      AIToolType = "cursor"
-	ClaudeCode  AIToolType = "claude-code"
-	Antigravity AIToolType = "antigravity"
-	Unknown     AIToolType = "unknown"
+	Cursor        AIToolType = "cursor"
+	ClaudeCode    AIToolType = "claude-code"
+	Antigravity   AIToolType = "antigravity"
+	GitHubCopilot AIToolType = "github-copilot"
+	Unknown       AIToolType = "unknown"
 )
 
 // String returns the human-readable name of the tool type.
@@ -19,6 +20,8 @@ func (t AIToolType) String() string {
 		return "Claude Code"
 	case Antigravity:
 		return "Antigravity"
+	case GitHubCopilot:
+		return "GitHub Copilot"
 	default:
 		return "Unknown"
 	}
@@ -33,6 +36,8 @@ func (t AIToolType) GetConfigDir() string {
 		return ".claude/commands"
 	case Antigravity:
 		return ".antigravity/commands"
+	case GitHubCopilot:
+		return ".github/copilot-prompts"
 	default:
 		return ""
 	}
@@ -47,9 +52,26 @@ func (t AIToolType) GetSignatureFiles() []string {
 		return []string{".claude", "CLAUDE.md"}
 	case Antigravity:
 		return []string{".antigravity"}
+	case GitHubCopilot:
+		return []string{".github"}
 	default:
 		return nil
 	}
+}
+
+// GetInstructionFile returns the path to the instruction file for tools that use one.
+func (t AIToolType) GetInstructionFile() string {
+	switch t {
+	case GitHubCopilot:
+		return ".github/copilot-instructions.md"
+	default:
+		return ""
+	}
+}
+
+// HasInstructionFile returns whether this tool type uses a separate instruction file.
+func (t AIToolType) HasInstructionFile() bool {
+	return t == GitHubCopilot
 }
 
 // DetectResult holds the result of environment detection.

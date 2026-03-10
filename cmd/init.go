@@ -2,6 +2,7 @@ package cmd
 
 import (
 	"os"
+	"path/filepath"
 
 	"github.com/charmbracelet/huh"
 	"github.com/spf13/cobra"
@@ -50,6 +51,14 @@ Creates the necessary directory structure for storing command templates.`,
 			return
 		}
 
+		if detectedResult.ToolType == detector.GitHubCopilot {
+			promptsDir := filepath.Join(workingDir, ".github", "copilot-prompts")
+			if err := os.MkdirAll(promptsDir, 0755); err != nil {
+				uiRenderer.RenderError("Failed to create copilot-prompts directory: " + err.Error())
+				return
+			}
+		}
+
 		uiRenderer.RenderSuccess("Initialized " + detectedResult.ToolType.String() + " command directory at: " + configPath)
 	},
 }
@@ -63,6 +72,7 @@ func selectToolInteractively() detector.AIToolType {
 		huh.NewOption("Cursor", "cursor"),
 		huh.NewOption("Claude Code", "claude-code"),
 		huh.NewOption("Antigravity", "antigravity"),
+		huh.NewOption("GitHub Copilot", "github-copilot"),
 	}
 
 	var selected string

@@ -6,6 +6,7 @@ import (
 
 	"github.com/spf13/cobra"
 
+	"open-spdd/internal/detector"
 	"open-spdd/internal/templates"
 )
 
@@ -67,6 +68,25 @@ func determineTargetDir() string {
 }
 
 func generateAllTemplates(targetDir string) {
+	if detectedResult.ToolType == detector.GitHubCopilot {
+		workingDir, _ := os.Getwd()
+		results := templateManager.GenerateForCopilot(workingDir, forceFlag)
+
+		var successCount, failCount int
+		for _, result := range results {
+			if result.Success {
+				successCount++
+				uiRenderer.RenderSuccess("Generated: " + result.FilePath)
+			} else {
+				failCount++
+				uiRenderer.RenderError("Failed: " + result.Message)
+			}
+		}
+
+		uiRenderer.RenderSuccess("Generation complete: " + formatCount(successCount, "succeeded") + ", " + formatCount(failCount, "failed"))
+		return
+	}
+
 	tmpls, err := templateManager.ListAll()
 	if err != nil {
 		uiRenderer.RenderError("Failed to list templates: " + err.Error())
