@@ -14,20 +14,39 @@ AI Coding Assistant Command Template Manager - A CLI tool for managing command t
 ### Homebrew (macOS/Linux)
 
 ```bash
-brew install wwdzhang/tap/openspdd
+brew install gszhangwei/tools/openspdd
+```
+
+Or:
+
+```bash
+brew tap gszhangwei/tools
+brew install openspdd
+```
+
+Upgrade to latest version:
+
+```bash
+brew upgrade openspdd
 ```
 
 ### Go Install
 
 ```bash
-go install github.com/wwdzhang/open-spdd@latest
+go install github.com/gszhangwei/open-spdd@latest
 ```
 
 ### Download Binary
 
-Download the latest release from [GitHub Releases](https://github.com/wwdzhang/open-spdd/releases).
+Download the latest release from [GitHub Releases](https://github.com/gszhangwei/open-spdd/releases).
 
 ## Usage
+
+First, navigate to your project directory:
+
+```bash
+cd /path/to/your/project
+```
 
 ### Initialize Environment
 
@@ -100,7 +119,7 @@ openspdd --tool antigravity <command>
 
 ```bash
 # Clone the repository
-git clone https://github.com/wwdzhang/open-spdd.git
+git clone https://github.com/gszhangwei/open-spdd.git
 cd open-spdd
 
 # Build
