@@ -23,6 +23,21 @@ var generateCmd = &cobra.Command{
 	Long: `Generate a command template file to the detected AI tool's config directory.
 If no template name is specified, an interactive selection will be shown.`,
 	Run: func(cmd *cobra.Command, args []string) {
+		if outputFlag == "" && toolFlag == "" {
+			tool := selectToolInteractively()
+			if tool == detector.Unknown {
+				uiRenderer.RenderError("No tool selected. Use --output or --tool flag.")
+				return
+			}
+			workingDir, _ := os.Getwd()
+			detectedResult = detector.DetectResult{
+				ToolType:   tool,
+				ConfigPath: det.GetConfigDirPath(tool, workingDir),
+				IsValid:    true,
+				Message:    "tool manually selected: " + tool.String(),
+			}
+		}
+
 		targetDir := determineTargetDir()
 		if targetDir == "" {
 			uiRenderer.RenderError("Could not determine target directory. Use --output or --tool flag.")
@@ -57,11 +72,6 @@ func determineTargetDir() string {
 
 	if detectedResult.IsValid && detectedResult.ConfigPath != "" {
 		return detectedResult.ConfigPath
-	}
-
-	workingDir, _ := os.Getwd()
-	if workingDir != "" {
-		return workingDir
 	}
 
 	return ""

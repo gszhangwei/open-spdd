@@ -512,20 +512,26 @@ open-spdd/
    - `--all, -a`: Generate all available templates
    - `--output, -o`: Custom output directory (overrides detection)
 5. **Run Logic**:
-   1. Determine target directory:
+   1. Handle tool selection (Always prompt unless overridden):
+      - If no `--tool` flag AND no `--output` flag:
+        - Always prompt user with interactive tool selection (user may use multiple AI tools in same project)
+        - If user selects Unknown/cancels, show error and return
+        - Otherwise, update detectedResult with selected tool
+      - If `--tool` or `--output` specified, skip interactive selection
+   2. Determine target directory:
       - If outputFlag set, use outputFlag
       - Else, use detectedResult.ConfigPath
       - If neither, error with ErrToolNotDetected
-   2. If allFlag is set:
+   3. If allFlag is set:
       - Get all templates
       - Generate each one, collecting results
       - Report summary
-   3. Else if template-name argument provided:
+   4. Else if template-name argument provided:
       - Generate specific template
-   4. Else:
+   5. Else:
       - Use interactive selection via ui.SelectTemplate()
       - Generate selected template
-   5. For each generation:
+   6. For each generation:
       - Build GenerateRequest with Force=forceFlag
       - Call templateManager.Generate()
       - Render success or error based on result

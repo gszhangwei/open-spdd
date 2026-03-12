@@ -53,7 +53,7 @@ func (t AIToolType) GetSignatureFiles() []string {
 	case Antigravity:
 		return []string{".antigravity"}
 	case GitHubCopilot:
-		return []string{".github"}
+		return []string{".github/copilot-instructions.md", ".github/copilot-prompts"}
 	default:
 		return nil
 	}

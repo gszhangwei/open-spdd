@@ -152,7 +152,7 @@ classDiagram
    - Add new constant `GitHubCopilot` with value `"github-copilot"`
    - Update `String()` method: when type is GitHubCopilot, return `"GitHub Copilot"`
    - Update `GetConfigDir()` method: when type is GitHubCopilot, return `".github/copilot-prompts"`
-   - Update `GetSignatureFiles()` method: when type is GitHubCopilot, return a list containing `".github"`
+   - Update `GetSignatureFiles()` method: when type is GitHubCopilot, return `[".github/copilot-instructions.md", ".github/copilot-prompts"]` (strict detection to avoid false positives from common `.github/` directory)
 
 3. **New Methods**:
    - `GetInstructionFile()`: Returns the path to the instruction file
@@ -169,7 +169,7 @@ classDiagram
 2. **Changes**:
    - In the `Detect()` method, add `GitHubCopilot` to the tool types detection list
    - Detection order MUST be: Cursor → ClaudeCode → Antigravity → GitHubCopilot
-   - GitHubCopilot is positioned last because `.github/` directory is common in many projects and would cause false positives if checked earlier
+   - GitHubCopilot uses strict signature detection (`.github/copilot-instructions.md` or `.github/copilot-prompts`) to avoid false positives from common `.github/` directory (used for GitHub Actions, issue templates, etc.)
 
 ### 3. Update Tool Flag Parsing - `cmd/root.go`
 

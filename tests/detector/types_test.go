@@ -119,7 +119,7 @@ func TestAIToolType_GetSignatureFiles(t *testing.T) {
 		{
 			name:     "GitHubCopilot signature files",
 			toolType: detector.GitHubCopilot,
-			want:     []string{".github"},
+			want:     []string{".github/copilot-instructions.md", ".github/copilot-prompts"},
 		},
 		{
 			name:     "Unknown returns nil",

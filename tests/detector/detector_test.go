@@ -114,10 +114,14 @@ func TestDefaultDetector_Detect_AntigravityEnvironment(t *testing.T) {
 	}
 }
 
-func TestDefaultDetector_Detect_GitHubCopilotEnvironment(t *testing.T) {
+func TestDefaultDetector_Detect_GitHubCopilotEnvironment_WithInstructionsFile(t *testing.T) {
 	tempDir := t.TempDir()
 	githubDir := filepath.Join(tempDir, ".github")
 	if err := os.MkdirAll(githubDir, 0755); err != nil {
+		t.Fatal(err)
+	}
+	instructionFile := filepath.Join(githubDir, "copilot-instructions.md")
+	if err := os.WriteFile(instructionFile, []byte("# Copilot Instructions"), 0644); err != nil {
 		t.Fatal(err)
 	}
 
@@ -132,6 +136,48 @@ func TestDefaultDetector_Detect_GitHubCopilotEnvironment(t *testing.T) {
 	}
 	if result.ConfigPath != filepath.Join(tempDir, ".github/copilot-prompts") {
 		t.Errorf("Detect() ConfigPath = %v, want %v", result.ConfigPath, filepath.Join(tempDir, ".github/copilot-prompts"))
+	}
+}
+
+func TestDefaultDetector_Detect_GitHubCopilotEnvironment_WithPromptsDir(t *testing.T) {
+	tempDir := t.TempDir()
+	promptsDir := filepath.Join(tempDir, ".github", "copilot-prompts")
+	if err := os.MkdirAll(promptsDir, 0755); err != nil {
+		t.Fatal(err)
+	}
+
+	det := detector.NewDefaultDetector()
+	result := det.Detect(tempDir)
+
+	if !result.IsValid {
+		t.Error("Detect() should return valid result for GitHub Copilot environment")
+	}
+	if result.ToolType != detector.GitHubCopilot {
+		t.Errorf("Detect() ToolType = %v, want %v", result.ToolType, detector.GitHubCopilot)
+	}
+}
+
+func TestDefaultDetector_Detect_GitHubOnly_NotCopilot(t *testing.T) {
+	tempDir := t.TempDir()
+	githubDir := filepath.Join(tempDir, ".github")
+	if err := os.MkdirAll(githubDir, 0755); err != nil {
+		t.Fatal(err)
+	}
+	// Only .github directory without copilot-specific files
+	workflowsDir := filepath.Join(githubDir, "workflows")
+	if err := os.MkdirAll(workflowsDir, 0755); err != nil {
+		t.Fatal(err)
+	}
+
+	det := detector.NewDefaultDetector()
+	result := det.Detect(tempDir)
+
+	// Should NOT detect as GitHub Copilot
+	if result.ToolType == detector.GitHubCopilot {
+		t.Error("Detect() should NOT detect as GitHub Copilot when only .github directory exists")
+	}
+	if result.IsValid {
+		t.Error("Detect() should return invalid result when only .github directory exists")
 	}
 }
 
@@ -196,11 +242,11 @@ func TestDefaultDetector_Detect_Priority_AntigravityOverCopilot(t *testing.T) {
 	tempDir := t.TempDir()
 
 	antigravityDir := filepath.Join(tempDir, ".antigravity")
-	githubDir := filepath.Join(tempDir, ".github")
+	copilotPromptsDir := filepath.Join(tempDir, ".github", "copilot-prompts")
 	if err := os.MkdirAll(antigravityDir, 0755); err != nil {
 		t.Fatal(err)
 	}
-	if err := os.MkdirAll(githubDir, 0755); err != nil {
+	if err := os.MkdirAll(copilotPromptsDir, 0755); err != nil {
 		t.Fatal(err)
 	}
 
@@ -224,7 +270,7 @@ func TestDefaultDetector_Detect_Priority_AllTools(t *testing.T) {
 	if err := os.MkdirAll(filepath.Join(tempDir, ".antigravity"), 0755); err != nil {
 		t.Fatal(err)
 	}
-	if err := os.MkdirAll(filepath.Join(tempDir, ".github"), 0755); err != nil {
+	if err := os.MkdirAll(filepath.Join(tempDir, ".github", "copilot-prompts"), 0755); err != nil {
 		t.Fatal(err)
 	}
 

@@ -102,12 +102,12 @@ openspdd --tool github-copilot <command>
 
 ## Supported Environments
 
-| Tool           | Detection                  | Config Directory           |
-| -------------- | -------------------------- | -------------------------- |
-| Cursor         | `.cursor/`, `.cursorrules` | `.cursor/commands/`        |
-| Claude Code    | `.claude/`, `CLAUDE.md`    | `.claude/commands/`        |
-| Antigravity    | `.antigravity/`            | `.antigravity/commands/`   |
-| GitHub Copilot | `.github/`                 | `.github/copilot-prompts/` |
+| Tool           | Detection                                              | Config Directory           |
+| -------------- | ------------------------------------------------------ | -------------------------- |
+| Cursor         | `.cursor/`, `.cursorrules`                             | `.cursor/commands/`        |
+| Claude Code    | `.claude/`, `CLAUDE.md`                                | `.claude/commands/`        |
+| Antigravity    | `.antigravity/`                                        | `.antigravity/commands/`   |
+| GitHub Copilot | `.github/copilot-instructions.md`, `.github/copilot-prompts/` | `.github/copilot-prompts/` |
 
 ### GitHub Copilot File Structure
 
