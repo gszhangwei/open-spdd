@@ -9,10 +9,15 @@ import (
 	"strings"
 
 	"open-spdd/internal"
+	"open-spdd/internal/detector"
 )
 
 // TemplateManager defines the interface for template operations.
 type TemplateManager interface {
+	ListCore() ([]TemplateMeta, error)
+	ListForTool(tool detector.AIToolType) ([]TemplateMeta, error)
+	ListOptional() ([]TemplateMeta, error)
+	ListAvailable(tool detector.AIToolType) ([]TemplateMeta, error)
 	ListAll() ([]TemplateMeta, error)
 	GetByName(name string) (TemplateMeta, error)
 	Generate(req GenerateRequest) GenerateResult
@@ -27,11 +32,11 @@ func NewEmbeddedTemplateManager() *EmbeddedTemplateManager {
 	return &EmbeddedTemplateManager{}
 }
 
-// ListAll returns all available templates sorted by name.
-func (m *EmbeddedTemplateManager) ListAll() ([]TemplateMeta, error) {
-	entries, err := fs.ReadDir(embeddedTemplates, "data")
+// loadTemplatesFromDir loads and parses templates from a specific embedded directory path.
+func (m *EmbeddedTemplateManager) loadTemplatesFromDir(dir string) ([]TemplateMeta, error) {
+	entries, err := fs.ReadDir(embeddedTemplates, dir)
 	if err != nil {
-		return nil, fmt.Errorf("failed to read embedded templates: %w", err)
+		return []TemplateMeta{}, nil
 	}
 
 	var templates []TemplateMeta
@@ -40,7 +45,7 @@ func (m *EmbeddedTemplateManager) ListAll() ([]TemplateMeta, error) {
 			continue
 		}
 
-		content, err := fs.ReadFile(embeddedTemplates, "data/"+entry.Name())
+		content, err := fs.ReadFile(embeddedTemplates, dir+"/"+entry.Name())
 		if err != nil {
 			continue
 		}
@@ -57,6 +62,96 @@ func (m *EmbeddedTemplateManager) ListAll() ([]TemplateMeta, error) {
 	})
 
 	return templates, nil
+}
+
+// ListCore returns all core templates that should be installed by default.
+func (m *EmbeddedTemplateManager) ListCore() ([]TemplateMeta, error) {
+	return m.loadTemplatesFromDir("data/core")
+}
+
+// ListForTool returns tool-specific templates for the given AI tool type.
+func (m *EmbeddedTemplateManager) ListForTool(tool detector.AIToolType) ([]TemplateMeta, error) {
+	if tool == detector.Unknown {
+		return []TemplateMeta{}, nil
+	}
+
+	dirName := tool.GetToolDirName()
+	if dirName == "" {
+		return []TemplateMeta{}, nil
+	}
+
+	return m.loadTemplatesFromDir("data/tools/" + dirName)
+}
+
+// ListOptional returns all optional templates available for manual selection.
+func (m *EmbeddedTemplateManager) ListOptional() ([]TemplateMeta, error) {
+	return m.loadTemplatesFromDir("data/optional")
+}
+
+// ListAvailable returns all templates available for the current environment.
+func (m *EmbeddedTemplateManager) ListAvailable(tool detector.AIToolType) ([]TemplateMeta, error) {
+	coreTemplates, err := m.ListCore()
+	if err != nil {
+		return nil, err
+	}
+
+	toolTemplates, err := m.ListForTool(tool)
+	if err != nil {
+		return nil, err
+	}
+
+	templates := append(coreTemplates, toolTemplates...)
+
+	sort.Slice(templates, func(i, j int) bool {
+		return templates[i].Name < templates[j].Name
+	})
+
+	return templates, nil
+}
+
+// ListAll returns ALL templates across all categories (for admin/debug use).
+func (m *EmbeddedTemplateManager) ListAll() ([]TemplateMeta, error) {
+	coreTemplates, err := m.ListCore()
+	if err != nil {
+		return nil, err
+	}
+
+	templates := coreTemplates
+
+	knownTools := []detector.AIToolType{
+		detector.Cursor,
+		detector.ClaudeCode,
+		detector.Antigravity,
+		detector.GitHubCopilot,
+	}
+
+	for _, tool := range knownTools {
+		toolTemplates, err := m.ListForTool(tool)
+		if err != nil {
+			continue
+		}
+		templates = append(templates, toolTemplates...)
+	}
+
+	optionalTemplates, err := m.ListOptional()
+	if err == nil {
+		templates = append(templates, optionalTemplates...)
+	}
+
+	seen := make(map[string]bool)
+	var unique []TemplateMeta
+	for _, t := range templates {
+		if !seen[t.ID] {
+			seen[t.ID] = true
+			unique = append(unique, t)
+		}
+	}
+
+	sort.Slice(unique, func(i, j int) bool {
+		return unique[i].Name < unique[j].Name
+	})
+
+	return unique, nil
 }
 
 // GetByName returns a template by its name (case-insensitive).
@@ -148,7 +243,7 @@ func (m *EmbeddedTemplateManager) GenerateForCopilot(targetDir string, force boo
 		return results
 	}
 
-	instructionContent, err := fs.ReadFile(embeddedTemplates, "data/copilot-instructions.md")
+	instructionContent, err := fs.ReadFile(embeddedTemplates, "data/tools/copilot/copilot-instructions.md")
 	if err != nil {
 		results = append(results, GenerateResult{
 			Success: false,
@@ -173,36 +268,18 @@ func (m *EmbeddedTemplateManager) GenerateForCopilot(targetDir string, force boo
 		return results
 	}
 
-	entries, err := fs.ReadDir(embeddedTemplates, "data")
+	coreTemplates, err := m.ListCore()
 	if err != nil {
 		results = append(results, GenerateResult{
 			Success: false,
-			Message: "failed to read templates: " + err.Error(),
+			Message: "failed to list core templates: " + err.Error(),
 			Error:   err,
 		})
 		return results
 	}
 
-	for _, entry := range entries {
-		if entry.IsDir() || !strings.HasSuffix(entry.Name(), ".md") {
-			continue
-		}
-		if entry.Name() == "copilot-instructions.md" {
-			continue
-		}
-
-		content, err := fs.ReadFile(embeddedTemplates, "data/"+entry.Name())
-		if err != nil {
-			results = append(results, GenerateResult{
-				Success:  false,
-				FilePath: entry.Name(),
-				Message:  "failed to read template: " + err.Error(),
-				Error:    err,
-			})
-			continue
-		}
-
-		targetPath := filepath.Join(promptsDir, entry.Name())
+	for _, tmpl := range coreTemplates {
+		targetPath := filepath.Join(promptsDir, tmpl.ID+".md")
 		if _, err := os.Stat(targetPath); err == nil && !force {
 			results = append(results, GenerateResult{
 				Success:  false,
@@ -213,7 +290,7 @@ func (m *EmbeddedTemplateManager) GenerateForCopilot(targetDir string, force boo
 			continue
 		}
 
-		if err := os.WriteFile(targetPath, content, 0644); err != nil {
+		if err := os.WriteFile(targetPath, []byte(tmpl.Content), 0644); err != nil {
 			results = append(results, GenerateResult{
 				Success:  false,
 				FilePath: targetPath,

@@ -74,6 +74,22 @@ func (t AIToolType) HasInstructionFile() bool {
 	return t == GitHubCopilot
 }
 
+// GetToolDirName returns the directory name under tools/ for this tool type.
+func (t AIToolType) GetToolDirName() string {
+	switch t {
+	case Cursor:
+		return "cursor"
+	case ClaudeCode:
+		return "claude-code"
+	case Antigravity:
+		return "antigravity"
+	case GitHubCopilot:
+		return "copilot"
+	default:
+		return ""
+	}
+}
+
 // DetectResult holds the result of environment detection.
 type DetectResult struct {
 	ToolType   AIToolType

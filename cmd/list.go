@@ -4,27 +4,44 @@ import (
 	"fmt"
 
 	"github.com/spf13/cobra"
+
+	"open-spdd/internal/templates"
 )
 
 var (
 	categoryFlag string
 	quietFlag    bool
+	optionalFlag bool
+	listAllFlag  bool
 )
 
 var listCmd = &cobra.Command{
 	Use:     "list",
 	Aliases: []string{"ls"},
 	Short:   "List available command templates",
-	Long:    `List all available command templates that can be generated.`,
+	Long: `List command templates that can be generated.
+
+By default, shows templates available for the detected environment (core + tool-specific).
+Use --optional to show optional templates, or --all to show all templates across categories.`,
 	Run: func(cmd *cobra.Command, args []string) {
-		tmpls, err := templateManager.ListAll()
+		var tmpls []templates.TemplateMeta
+		var err error
+
+		if listAllFlag {
+			tmpls, err = templateManager.ListAll()
+		} else if optionalFlag {
+			tmpls, err = templateManager.ListOptional()
+		} else {
+			tmpls, err = templateManager.ListAvailable(detectedResult.ToolType)
+		}
+
 		if err != nil {
 			uiRenderer.RenderError("Failed to list templates: " + err.Error())
 			return
 		}
 
 		if categoryFlag != "" {
-			var filtered []interface{}
+			var filtered []templates.TemplateMeta
 			for _, t := range tmpls {
 				if t.Category == categoryFlag {
 					filtered = append(filtered, t)
@@ -34,13 +51,11 @@ var listCmd = &cobra.Command{
 				uiRenderer.RenderWarning("No templates found in category: " + categoryFlag)
 				return
 			}
+			tmpls = filtered
 		}
 
 		if quietFlag {
 			for _, t := range tmpls {
-				if categoryFlag != "" && t.Category != categoryFlag {
-					continue
-				}
 				fmt.Println(t.ID)
 			}
 			return
@@ -48,9 +63,6 @@ var listCmd = &cobra.Command{
 
 		var rows [][]string
 		for _, t := range tmpls {
-			if categoryFlag != "" && t.Category != categoryFlag {
-				continue
-			}
 			rows = append(rows, []string{t.Name, t.Category, t.Description})
 		}
 
@@ -66,5 +78,7 @@ var listCmd = &cobra.Command{
 func init() {
 	listCmd.Flags().StringVarP(&categoryFlag, "category", "c", "", "Filter by category")
 	listCmd.Flags().BoolVarP(&quietFlag, "quiet", "q", false, "Output only template names (for piping)")
+	listCmd.Flags().BoolVar(&optionalFlag, "optional", false, "List optional templates")
+	listCmd.Flags().BoolVar(&listAllFlag, "all", false, "List all templates across all categories")
 	rootCmd.AddCommand(listCmd)
 }

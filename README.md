@@ -74,14 +74,14 @@ openspdd list -q
 ### Generate Templates
 
 ```bash
+# Generate all default templates
+openspdd generate --all
+
 # Interactive selection
 openspdd generate
 
 # Generate specific template
 openspdd generate spdd-generate
-
-# Generate all templates
-openspdd generate --all
 
 # Force overwrite existing files
 openspdd generate --force spdd-generate
@@ -102,12 +102,12 @@ openspdd --tool github-copilot <command>
 
 ## Supported Environments
 
-| Tool | Detection | Config Directory |
-|------|-----------|------------------|
-| Cursor | `.cursor/`, `.cursorrules` | `.cursor/commands/` |
-| Claude Code | `.claude/`, `CLAUDE.md` | `.claude/commands/` |
-| Antigravity | `.antigravity/` | `.antigravity/commands/` |
-| GitHub Copilot | `.github/` | `.github/copilot-prompts/` |
+| Tool           | Detection                  | Config Directory           |
+| -------------- | -------------------------- | -------------------------- |
+| Cursor         | `.cursor/`, `.cursorrules` | `.cursor/commands/`        |
+| Claude Code    | `.claude/`, `CLAUDE.md`    | `.claude/commands/`        |
+| Antigravity    | `.antigravity/`            | `.antigravity/commands/`   |
+| GitHub Copilot | `.github/`                 | `.github/copilot-prompts/` |
 
 ### GitHub Copilot File Structure
 
@@ -126,11 +126,11 @@ The `copilot-instructions.md` file uses marker-based merging (`<!-- openspdd:sta
 
 ## Available Templates
 
-| Template | Description |
-|----------|-------------|
-| `spdd-generate` | Generate code from structured SPDD prompt files |
-| `spdd-sync` | Sync code changes back to SPDD prompt files |
-| `spdd-reasons-canvas` | Generate REASONS-Canvas structured prompts |
+| Template              | Description                                     |
+| --------------------- | ----------------------------------------------- |
+| `spdd-generate`       | Generate code from structured SPDD prompt files |
+| `spdd-sync`           | Sync code changes back to SPDD prompt files     |
+| `spdd-reasons-canvas` | Generate REASONS-Canvas structured prompts      |
 
 ## Building from Source
 

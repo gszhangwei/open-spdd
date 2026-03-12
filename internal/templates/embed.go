@@ -2,5 +2,5 @@ package templates
 
 import "embed"
 
-//go:embed data/*.md
+//go:embed all:data
 var embeddedTemplates embed.FS

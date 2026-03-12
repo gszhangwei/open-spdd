@@ -87,7 +87,7 @@ func generateAllTemplates(targetDir string) {
 		return
 	}
 
-	tmpls, err := templateManager.ListAll()
+	tmpls, err := templateManager.ListAvailable(detectedResult.ToolType)
 	if err != nil {
 		uiRenderer.RenderError("Failed to list templates: " + err.Error())
 		return
@@ -129,7 +129,7 @@ func generateSingleTemplate(name, targetDir string) {
 }
 
 func generateInteractively(targetDir string) {
-	tmpls, err := templateManager.ListAll()
+	tmpls, err := templateManager.ListAvailable(detectedResult.ToolType)
 	if err != nil {
 		uiRenderer.RenderError("Failed to list templates: " + err.Error())
 		return
