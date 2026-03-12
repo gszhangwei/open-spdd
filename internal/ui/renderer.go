@@ -68,7 +68,7 @@ func (r *CharmUIRenderer) RenderTable(headers []string, rows [][]string) {
 			headerLine.WriteString("  ")
 			separatorLine.WriteString("  ")
 		}
-		headerLine.WriteString(padRight(h, colWidths[i]))
+		headerLine.WriteString(PadRight(h, colWidths[i]))
 		separatorLine.WriteString(strings.Repeat("-", colWidths[i]))
 	}
 
@@ -82,7 +82,7 @@ func (r *CharmUIRenderer) RenderTable(headers []string, rows [][]string) {
 				rowLine.WriteString("  ")
 			}
 			if i < len(colWidths) {
-				rowLine.WriteString(padRight(cell, colWidths[i]))
+				rowLine.WriteString(PadRight(cell, colWidths[i]))
 			} else {
 				rowLine.WriteString(cell)
 			}
@@ -143,7 +143,8 @@ func (r *CharmUIRenderer) Confirm(prompt string) bool {
 	return confirmed
 }
 
-func padRight(s string, width int) string {
+// PadRight pads a string with spaces to the specified width.
+func PadRight(s string, width int) string {
 	if len(s) >= width {
 		return s
 	}

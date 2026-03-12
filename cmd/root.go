@@ -35,7 +35,7 @@ Auto-detects your current environment and manages command templates.`,
 		workingDir, _ := os.Getwd()
 
 		if toolFlag != "" {
-			toolType := parseToolFlag(toolFlag)
+			toolType := ParseToolFlag(toolFlag)
 			detectedResult = detector.DetectResult{
 				ToolType:   toolType,
 				ConfigPath: det.GetConfigDirPath(toolType, workingDir),
@@ -59,7 +59,8 @@ func Execute() {
 	}
 }
 
-func parseToolFlag(flag string) detector.AIToolType {
+// ParseToolFlag converts a tool flag string to AIToolType.
+func ParseToolFlag(flag string) detector.AIToolType {
 	switch strings.ToLower(flag) {
 	case "cursor":
 		return detector.Cursor

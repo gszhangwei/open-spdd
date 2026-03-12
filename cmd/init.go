@@ -89,5 +89,5 @@ func selectToolInteractively() detector.AIToolType {
 		return detector.Unknown
 	}
 
-	return parseToolFlag(selected)
+	return ParseToolFlag(selected)
 }

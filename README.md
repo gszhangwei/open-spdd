@@ -146,6 +146,33 @@ go build -o openspdd .
 go install .
 ```
 
+## Testing
+
+Tests are organized in the `tests/` directory, structured by module:
+
+```
+tests/
+├── cmd/           # CLI command tests
+├── detector/      # Environment detection tests
+├── templates/     # Template management tests
+├── ui/            # UI renderer tests
+└── internal/      # Error constants tests
+```
+
+### Running Tests
+
+```bash
+# Run all tests
+go test ./tests/...
+
+# Run tests with verbose output
+go test ./tests/... -v
+
+# Run specific module tests
+go test ./tests/detector/...
+go test ./tests/templates/...
+```
+
 ## License
 
 [MIT License](LICENSE)
