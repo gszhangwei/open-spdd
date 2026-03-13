@@ -61,8 +61,14 @@ openspdd --tool cursor init
 ### List Commands
 
 ```bash
-# List all commands
+# List available commands (core + tool-specific)
 openspdd list
+
+# List optional commands
+openspdd list --optional
+
+# List all commands across all categories
+openspdd list --all
 
 # Filter by category
 openspdd list -c Development
@@ -126,11 +132,33 @@ The `copilot-instructions.md` file uses marker-based merging (`<!-- openspdd:sta
 
 ## Available Commands
 
+### Core Commands
+
+These commands are available for all AI tools:
+
 | Command               | Description                                     |
 | --------------------- | ----------------------------------------------- |
 | `spdd-generate`       | Generate code from structured SPDD prompt files |
 | `spdd-sync`           | Sync code changes back to SPDD prompt files     |
 | `spdd-reasons-canvas` | Generate REASONS-Canvas structured prompts      |
+
+### Tool-Specific Commands
+
+| Tool           | Command                 | Description                          |
+| -------------- | ----------------------- | ------------------------------------ |
+| GitHub Copilot | `copilot-instructions`  | Main instruction file for Copilot    |
+
+### Optional Commands
+
+Optional commands can be listed with `openspdd list --optional` and installed by name:
+
+```bash
+# List optional commands
+openspdd list --optional
+
+# Install a specific optional command
+openspdd generate <optional-command-name>
+```
 
 ## Building from Source
 
