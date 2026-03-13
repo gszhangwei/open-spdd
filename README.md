@@ -1,12 +1,12 @@
 # OpenSPDD
 
-AI Coding Assistant Command Template Manager - A CLI tool for managing command templates across Cursor, Claude Code, Antigravity, and GitHub Copilot environments.
+AI Coding Assistant Command Manager - A CLI tool for managing SPDD commands across Cursor, Claude Code, Antigravity, and GitHub Copilot environments.
 
 ## Features
 
 - **Auto-detection**: Automatically detects your AI coding environment (Cursor, Claude Code, Antigravity, GitHub Copilot)
-- **Template Management**: Embedded templates distributed via a single binary
-- **Interactive UI**: Modern terminal UI for template selection
+- **Command Management**: Embedded SPDD commands distributed via a single binary
+- **Interactive UI**: Modern terminal UI for command selection
 - **Cross-platform**: Supports macOS, Linux, and Windows
 
 ## Installation
@@ -58,10 +58,10 @@ openspdd init
 openspdd --tool cursor init
 ```
 
-### List Templates
+### List Commands
 
 ```bash
-# List all templates
+# List all commands
 openspdd list
 
 # Filter by category
@@ -71,16 +71,16 @@ openspdd list -c Development
 openspdd list -q
 ```
 
-### Generate Templates
+### Generate Commands
 
 ```bash
-# Generate all default templates
+# Generate all default commands
 openspdd generate --all
 
 # Interactive selection
 openspdd generate
 
-# Generate specific template
+# Generate specific command
 openspdd generate spdd-generate
 
 # Force overwrite existing files
@@ -124,9 +124,9 @@ For GitHub Copilot, OpenSPDD generates a different file structure:
 
 The `copilot-instructions.md` file uses marker-based merging (`<!-- openspdd:start -->` and `<!-- openspdd:end -->`) to preserve any custom content you add outside the marked section.
 
-## Available Templates
+## Available Commands
 
-| Template              | Description                                     |
+| Command               | Description                                     |
 | --------------------- | ----------------------------------------------- |
 | `spdd-generate`       | Generate code from structured SPDD prompt files |
 | `spdd-sync`           | Sync code changes back to SPDD prompt files     |
@@ -154,7 +154,7 @@ Tests are organized in the `tests/` directory, structured by module:
 tests/
 ├── cmd/           # CLI command tests
 ├── detector/      # Environment detection tests
-├── templates/     # Template management tests
+├── templates/     # Command management tests
 ├── ui/            # UI renderer tests
 └── internal/      # Error constants tests
 ```
