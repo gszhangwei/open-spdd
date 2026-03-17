@@ -1,13 +1,92 @@
 # OpenSPDD
 
-AI Coding Assistant Command Manager - A CLI tool for managing SPDD commands across Cursor, Claude Code, Antigravity, and GitHub Copilot environments.
+> **Structured Prompt-Driven Development** — Transform AI coding prompts into executable design contracts
+
+[中文文档](README.zh-CN.md)
+
+OpenSPDD is a methodology and cross-platform CLI tool for the AI coding era. It upgrades AI coding prompts from "disposable inputs" to "executable design contracts" with bidirectional synchronization between design and implementation.
+
+## Why OpenSPDD?
+
+Existing AI coding tools generate plan documents, but these documents have fundamental limitations:
+
+| Problem | Typical Plan Documents | REASONS Canvas |
+|---------|------------------------|----------------|
+| **Nature** | Task list | Design contract |
+| **Constraints** | None — AI improvises freely | Explicit — Norms define "how", Safeguards define "what not to do" |
+| **Detail Level** | High-level: *"Create BillingService"* | Precise: *method signatures, parameters, error handling, DI patterns* |
+| **Traceability** | None — docs don't update with code | Yes — `/spdd-sync` enables reverse sync |
+| **Validation** | Vague — *"done when complete"* | Explicit — exact error messages, HTTP status codes in Safeguards |
+| **Dependencies** | Implicit — AI infers | Explicit — Operations define strict execution order |
+
+**The core insight**: Plans are "suggestions", REASONS Canvas is a "contract".
+
+## The REASONS Canvas Framework
+
+REASONS Canvas is a 7-dimensional structured design framework:
+
+```
+┌─────────────────────────────────────────────────────────────────────┐
+│                        REASONS Canvas                                │
+├─────────────────────────────────────────────────────────────────────┤
+│                                                                      │
+│  R - Requirements    The "why" — business goals and scope            │
+│  E - Entities        Domain model (Mermaid class diagrams)           │
+│  A - Approach        Solution strategy and trade-offs                │
+│  S - Structure       Architecture, inheritance, dependencies         │
+│  O - Operations      Precise implementation tasks in order           │
+│  N - Norms           Coding standards and patterns                   │
+│  S - Safeguards      Constraints and guardrails                      │
+│                                                                      │
+└─────────────────────────────────────────────────────────────────────┘
+```
+
+**Why 7 dimensions?**
+- **R+E+A** = Design decisions ("Why" and "What")
+- **S+O** = Implementation path ("How")
+- **N+S** = Quality guardrails
+
+All three are essential: without N+S, AI improvises; without S+O, AI restructures arbitrarily; without R+E+A, AI lacks context.
+
+## Core Workflow
+
+```
+┌─────────────────────────────────────────────────────────────────────┐
+│                         SPDD Workflow                                │
+├─────────────────────────────────────────────────────────────────────┤
+│                                                                      │
+│  Business Requirement                                                │
+│      │                                                               │
+│      ▼                                                               │
+│  /spdd-analysis ──────→ Strategic analysis (concepts, risks)         │
+│      │                                                               │
+│      ▼                                                               │
+│  /spdd-reasons-canvas ─→ REASONS Canvas design document              │
+│      │                                                               │
+│      ▼                                                               │
+│  /spdd-generate ───────→ AI generates code per contract              │
+│      │                                                               │
+│      ▼                                                               │
+│  Code Review / Refactoring                                           │
+│      │                                                               │
+│      ▼                                                               │
+│  /spdd-sync ───────────→ Reverse sync changes back to design         │
+│      │                                                               │
+│      ▼                                                               │
+│  Design stays in sync ─→ Next iteration builds on accurate design    │
+│                                                                      │
+└─────────────────────────────────────────────────────────────────────┘
+```
+
+**Key principle**: *"When reality diverges, fix the prompt first — then update the code."*
 
 ## Features
 
-- **Auto-detection**: Automatically detects your AI coding environment (Cursor, Claude Code, Antigravity, GitHub Copilot)
-- **Command Management**: Embedded SPDD commands distributed via a single binary
+- **Cross-platform**: Supports Cursor, Claude Code, GitHub Copilot, and Antigravity
+- **Auto-detection**: Automatically detects your AI coding environment
+- **Single Binary**: All templates embedded via Go's embed directive
+- **Bidirectional Sync**: Keep design documents and code in sync
 - **Interactive UI**: Modern terminal UI for command selection
-- **Cross-platform**: Supports macOS, Linux, and Windows
 
 ## Installation
 
@@ -24,12 +103,6 @@ brew tap gszhangwei/tools
 brew install openspdd
 ```
 
-Upgrade to latest version:
-
-```bash
-brew upgrade openspdd
-```
-
 ### Go Install
 
 ```bash
@@ -38,15 +111,27 @@ go install github.com/gszhangwei/open-spdd@latest
 
 ### Download Binary
 
-Download the latest release from [GitHub Releases](https://github.com/gszhangwei/open-spdd/releases).
+Download from [GitHub Releases](https://github.com/gszhangwei/open-spdd/releases).
 
-## Usage
-
-First, navigate to your project directory:
+## Quick Start
 
 ```bash
-cd /path/to/your/project
+# Navigate to your project
+cd your-project
+
+# Initialize (auto-detects AI tool)
+openspdd init
+
+# Generate SPDD commands
+openspdd generate --all
+
+# In your AI coding tool, use:
+/spdd-reasons-canvas Implement user registration with email verification
+/spdd-generate @spdd/prompt/xxx.md
+/spdd-sync @spdd/prompt/xxx.md
 ```
+
+## Usage
 
 ### Initialize Environment
 
@@ -67,14 +152,11 @@ openspdd list
 # List optional commands
 openspdd list --optional
 
-# List all commands across all categories
+# List all commands
 openspdd list --all
 
 # Filter by category
 openspdd list -c Development
-
-# Quiet mode (for scripting)
-openspdd list -q
 ```
 
 ### Generate Commands
@@ -89,17 +171,13 @@ openspdd generate
 # Generate specific command
 openspdd generate spdd-generate
 
-# Force overwrite existing files
+# Force overwrite
 openspdd generate --force spdd-generate
-
-# Custom output directory
-openspdd generate --output ./my-commands spdd-generate
 ```
 
 ### Global Flags
 
 ```bash
-# Manually specify AI tool
 openspdd --tool cursor <command>
 openspdd --tool claude-code <command>
 openspdd --tool antigravity <command>
@@ -117,40 +195,33 @@ openspdd --tool github-copilot <command>
 
 ### GitHub Copilot File Structure
 
-For GitHub Copilot, OpenSPDD generates a different file structure:
-
 ```
 .github/
 ├── copilot-instructions.md     # Main instruction file (auto-merged with markers)
 └── copilot-prompts/
-    ├── spdd-reasons-canvas.md  # REASONS-Canvas workflow
-    ├── spdd-generate.md        # Code generation workflow
-    └── spdd-sync.md            # Sync workflow
+    ├── spdd-reasons-canvas.md
+    ├── spdd-generate.md
+    └── spdd-sync.md
 ```
-
-The `copilot-instructions.md` file uses marker-based merging (`<!-- openspdd:start -->` and `<!-- openspdd:end -->`) to preserve any custom content you add outside the marked section.
 
 ## Available Commands
 
 ### Core Commands
-
-These commands are available for all AI tools:
 
 | Command               | Description                                     |
 | --------------------- | ----------------------------------------------- |
 | `spdd-generate`       | Generate code from structured SPDD prompt files |
 | `spdd-sync`           | Sync code changes back to SPDD prompt files     |
 | `spdd-reasons-canvas` | Generate REASONS-Canvas structured prompts      |
+| `spdd-analysis`       | Strategic analysis of requirements              |
 
 ### Tool-Specific Commands
 
-| Tool           | Command                 | Description                          |
-| -------------- | ----------------------- | ------------------------------------ |
-| GitHub Copilot | `copilot-instructions`  | Main instruction file for Copilot    |
+| Tool           | Command                 | Description                       |
+| -------------- | ----------------------- | --------------------------------- |
+| GitHub Copilot | `copilot-instructions`  | Main instruction file for Copilot |
 
 ### Optional Commands
-
-Optional commands can be listed with `openspdd list --optional` and installed by name:
 
 ```bash
 # List optional commands
@@ -160,40 +231,72 @@ openspdd list --optional
 openspdd generate <optional-command-name>
 ```
 
+## Plan vs REASONS Canvas: An Example
+
+**Scenario**: Implement user registration
+
+**Typical Plan**:
+```
+1. Create UserRegistrationController
+2. Create UserRegistrationService
+3. Create UserRegistrationRequest DTO
+4. Implement email validation
+5. Save user to database
+```
+
+**REASONS Canvas (Operations excerpt)**:
+```markdown
+### Create UserRegistrationService - `UserRegistrationServiceImpl`
+
+1. **Responsibility**: Handle user registration business logic
+2. **Package**: `com.example.user.service.impl`
+3. **Implements**: `UserRegistrationService` interface
+4. **Dependencies** (constructor injection):
+   - `UserRepository userRepository`
+   - `EmailValidator emailValidator`
+   - `PasswordEncoder passwordEncoder`
+5. **Methods**:
+   - `register(UserRegistrationRequest request): UserRegistrationResponse`
+     - **Input Validation**: Call `emailValidator.validate(request.getEmail())`
+     - **Business Logic**:
+       1. Check if email exists via `userRepository.existsByEmail()`
+       2. If exists, throw `EmailAlreadyExistsException` with message "Email already registered"
+       3. Encode password via `passwordEncoder.encode()`
+       4. Create User entity with status `PENDING_VERIFICATION`
+       5. Save via `userRepository.save()`
+     - **Exception Handling**: Let exceptions propagate to GlobalExceptionHandler
+6. **Annotations**: `@Service`, `@Transactional`
+```
+
+**The difference**: Plan says "what to do", REASONS Canvas specifies "exactly how to do it".
+
+## When to Use OpenSPDD
+
+| Scenario | Recommendation | Reason |
+|----------|----------------|--------|
+| Enterprise feature development | Highly recommended | Design-implementation traceability, long-term maintainability |
+| Team collaboration | Highly recommended | Unified AI coding standards, reduced style conflicts |
+| Complex refactoring | Recommended | Strict Operations order prevents dependency chaos |
+| Cross-tool workflows | Recommended | Same REASONS Canvas works across different AI tools |
+| Quick prototypes | Consider | May be overhead, but valuable if maintenance is needed |
+| One-off scripts | Not recommended | ROI too low |
+
 ## Building from Source
 
 ```bash
-# Clone the repository
 git clone https://github.com/gszhangwei/open-spdd.git
 cd open-spdd
-
-# Build
 go build -o openspdd .
-
-# Install to GOPATH/bin
 go install .
 ```
 
 ## Testing
 
-Tests are organized in the `tests/` directory, structured by module:
-
-```
-tests/
-├── cmd/           # CLI command tests
-├── detector/      # Environment detection tests
-├── templates/     # Command management tests
-├── ui/            # UI renderer tests
-└── internal/      # Error constants tests
-```
-
-### Running Tests
-
 ```bash
 # Run all tests
 go test ./tests/...
 
-# Run tests with verbose output
+# Run with verbose output
 go test ./tests/... -v
 
 # Run specific module tests
