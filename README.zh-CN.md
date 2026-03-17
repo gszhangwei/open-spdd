@@ -130,11 +130,28 @@ openspdd init
 
 # 生成 SPDD 命令
 openspdd generate --all
+```
 
-# 在 AI 编码工具中使用：
-/spdd-reasons-canvas 实现用户注册功能，支持邮箱验证
+然后在 AI 编码工具中，按照完整的 SPDD 工作流操作：
+
+```bash
+# 第一步：战略级分析（复杂功能推荐）
+/spdd-analysis @requirements/user-registration.md
+
+# 第二步：根据分析生成 REASONS Canvas
+/spdd-reasons-canvas @spdd/analysis/xxx.md
+
+# 第三步：根据 REASONS Canvas 生成代码
 /spdd-generate @spdd/prompt/xxx.md
+
+# 第四步：代码审查/重构后，同步变更回设计文档
 /spdd-sync @spdd/prompt/xxx.md
+```
+
+对于简单功能，可以跳过第一步，直接提供需求描述：
+
+```bash
+/spdd-reasons-canvas 实现用户注册功能，支持邮箱验证
 ```
 
 ## 使用方法

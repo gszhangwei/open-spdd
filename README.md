@@ -124,11 +124,28 @@ openspdd init
 
 # Generate SPDD commands
 openspdd generate --all
+```
 
-# In your AI coding tool, use:
-/spdd-reasons-canvas Implement user registration with email verification
+Then in your AI coding tool, follow the complete SPDD workflow:
+
+```bash
+# Step 1: Strategic analysis (recommended for complex features)
+/spdd-analysis @requirements/user-registration.md
+
+# Step 2: Generate REASONS Canvas from analysis
+/spdd-reasons-canvas @spdd/analysis/xxx.md
+
+# Step 3: Generate code from REASONS Canvas
 /spdd-generate @spdd/prompt/xxx.md
+
+# Step 4: After code review/refactoring, sync changes back
 /spdd-sync @spdd/prompt/xxx.md
+```
+
+For simpler features, you can skip Step 1 and provide requirements directly:
+
+```bash
+/spdd-reasons-canvas Implement user registration with email verification
 ```
 
 ## Usage
