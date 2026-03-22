@@ -7,6 +7,17 @@ description: Generate a self-contained shell script with cURL commands to test A
 
 Generate a comprehensive, self-contained shell script (`scripts/test-api.sh`) with cURL commands to test all API scenarios defined in the codebase or acceptance criteria.
 
+**Key Feature: Structured Test Case Tables**
+
+The generated script includes human-reviewable test case tables:
+1. **At script top**: A structured table showing all test scenarios, inputs, and expected outputs
+2. **After execution**: A results table showing expected vs actual results with pass/fail status
+
+This makes it easy for humans to:
+- Review test coverage at a glance
+- Verify expected values are correct
+- Quickly identify which tests failed and why
+
 **Input**: The argument after `/spdd-api-test` is a reference to generated code, acceptance criteria document, or API specification.
 
 Input can be provided in several ways:
@@ -73,7 +84,41 @@ Input can be provided in several ways:
    - Example values in acceptance criteria
    - Common test data patterns
 
-3. **Generate test script structure**
+3. **Design structured test case tables**
+
+   Before generating the script, organize test cases into logical tables by test pattern.
+
+   **Group tests by their input/output structure**:
+
+   a. **Validation Error Tests** (expect HTTP 400/404):
+   ```
+   | Test ID | Description              | Customer     | Model      | Prompt | Completion | HTTP | Expected Error           |
+   |---------|--------------------------|--------------|------------|--------|------------|------|--------------------------|
+   | AC1.1   | Missing modelId          | CUST-001     | (missing)  | 1000   | 500        | 400  | Model ID is required     |
+   | AC1.2   | Missing customerId       | (missing)    | fast-model | 1000   | 500        | 400  | Customer ID is required  |
+   | AC1.6   | Non-existent customer    | NON-EXISTENT | fast-model | 1000   | 500        | 404  | Customer not found       |
+   ```
+
+   b. **Standard Plan Tests** (quota-based billing):
+   ```
+   | Test ID | Description          | Customer | Model      | Prompt | Completion | HTTP | IncludedUsed | Overage | TotalCharge |
+   |---------|----------------------|----------|------------|--------|------------|------|--------------|---------|-------------|
+   | AC2.1   | Within quota         | CUST-001 | fast-model | 1000   | 500        | 201  | 1500         | 0       | 0.00        |
+   | AC2.3   | Exceeds small quota  | CUST-002 | fast-model | 10000  | 5000       | 201  | 10000        | 5000    | 0.15        |
+   ```
+
+   c. **Premium Plan Tests** (split-rate billing):
+   ```
+   | Test ID | Description         | Customer     | Model           | Prompt | Completion | HTTP | PromptCharge | CompletionCharge | TotalCharge |
+   |---------|---------------------|--------------|-----------------|--------|------------|------|--------------|------------------|-------------|
+   | AC3.1   | fast-model billing  | CUST-PREMIUM | fast-model      | 10000  | 5000       | 201  | 0.10         | 0.10             | 0.20        |
+   | AC3.2   | reasoning-model     | CUST-PREMIUM | reasoning-model | 10000  | 20000      | 201  | 0.30         | 1.20             | 1.50        |
+   ```
+
+   d. **Special/Structural Tests** (checks that don't fit tabular pattern):
+   - Keep these as descriptive test cases in the script
+
+4. **Generate test script structure**
 
    Create the shell script with the following structure:
 
@@ -93,6 +138,39 @@ Input can be provided in several ways:
    # - HTTP status captured via: -o /tmp/response.txt -w "%{http_code}"
    #
    # =============================================================================
+   #
+   # TEST CASE OVERVIEW (Human-Reviewable)
+   # =============================================================================
+   #
+   # ┌─────────────────────────────────────────────────────────────────────────────┐
+   # │ VALIDATION ERROR TESTS                                                      │
+   # ├─────────┬──────────────────────┬──────────┬────────┬────────┬──────┬────────┤
+   # │ Test ID │ Description          │ Customer │ Model  │ Prompt │ Comp │ HTTP   │
+   # ├─────────┼──────────────────────┼──────────┼────────┼────────┼──────┼────────┤
+   # │ AC1.1   │ Missing modelId      │ CUST-001 │ -      │ 1000   │ 500  │ 400    │
+   # │ AC1.2   │ Missing customerId   │ -        │ fast   │ 1000   │ 500  │ 400    │
+   # │ AC1.6   │ Non-existent customer│ INVALID  │ fast   │ 1000   │ 500  │ 404    │
+   # └─────────┴──────────────────────┴──────────┴────────┴────────┴──────┴────────┘
+   #
+   # ┌─────────────────────────────────────────────────────────────────────────────┐
+   # │ STANDARD PLAN TESTS (Quota-based billing)                                   │
+   # ├─────────┬────────────────┬──────────┬────────┬────────┬──────┬──────┬───────┤
+   # │ Test ID │ Description    │ Customer │ Model  │ Prompt │ Comp │ HTTP │ Charge│
+   # ├─────────┼────────────────┼──────────┼────────┼────────┼──────┼──────┼───────┤
+   # │ AC2.1   │ Within quota   │ CUST-001 │ fast   │ 1000   │ 500  │ 201  │ 0.00  │
+   # │ AC2.3   │ Exceeds quota  │ CUST-002 │ fast   │ 10000  │ 5000 │ 201  │ 0.15  │
+   # └─────────┴────────────────┴──────────┴────────┴────────┴──────┴──────┴───────┘
+   #
+   # ┌─────────────────────────────────────────────────────────────────────────────┐
+   # │ PREMIUM PLAN TESTS (Split prompt/completion billing)                        │
+   # ├─────────┬────────────────┬──────────┬─────────┬────────┬──────┬──────┬──────┤
+   # │ Test ID │ Description    │ Customer │ Model   │ Prompt │ Comp │ HTTP │ Total│
+   # ├─────────┼────────────────┼──────────┼─────────┼────────┼──────┼──────┼──────┤
+   # │ AC3.1   │ fast-model     │ PREMIUM  │ fast    │ 10000  │ 5000 │ 201  │ 0.20 │
+   # │ AC3.2   │ reasoning-model│ PREMIUM  │ reason  │ 10000  │ 20000│ 201  │ 1.50 │
+   # └─────────┴────────────────┴──────────┴─────────┴────────┴──────┴──────┴──────┘
+   #
+   # =============================================================================
 
    # -----------------------------------------------------------------------------
    # CONFIGURATION
@@ -105,12 +183,14 @@ Input can be provided in several ways:
        GREEN='\033[0;32m'
        YELLOW='\033[1;33m'
        BLUE='\033[0;34m'
+       CYAN='\033[0;36m'
        NC='\033[0m' # No Color
    else
        RED=''
        GREEN=''
        YELLOW=''
        BLUE=''
+       CYAN=''
        NC=''
    fi
 
@@ -127,11 +207,18 @@ Input can be provided in several ways:
    # -----------------------------------------------------------------------------
 
    # -----------------------------------------------------------------------------
-   # TEST COUNTERS
+   # TEST COUNTERS AND RESULT TRACKING
    # -----------------------------------------------------------------------------
    TESTS_PASSED=0
    TESTS_FAILED=0
    TESTS_TOTAL=0
+   
+   # Arrays to track results for final summary table
+   declare -a TEST_IDS
+   declare -a TEST_DESCRIPTIONS
+   declare -a EXPECTED_STATUS
+   declare -a ACTUAL_STATUS
+   declare -a TEST_RESULTS
 
    # -----------------------------------------------------------------------------
    # HELPER FUNCTIONS
@@ -151,13 +238,24 @@ Input can be provided in several ways:
        echo -e "${GREEN}Response:${NC}"
    }
 
+   # Record test result for final summary table
+   # Usage: record_result "Test ID" "Description" "Expected" "Actual" "PASS|FAIL"
+   record_result() {
+       TEST_IDS+=("$1")
+       TEST_DESCRIPTIONS+=("$2")
+       EXPECTED_STATUS+=("$3")
+       ACTUAL_STATUS+=("$4")
+       TEST_RESULTS+=("$5")
+   }
+
    # Check test result - called after each curl command
-   # Usage: check_result "Test Name" "Expected Status" "$HTTP_CODE" "$BODY"
+   # Usage: check_result "Test ID" "Test Description" "Expected Status" "$HTTP_CODE" "$BODY"
    check_result() {
-       local test_name="$1"
-       local expected_status="$2"
-       local actual_status="$3"
-       local body="$4"
+       local test_id="$1"
+       local test_desc="$2"
+       local expected_status="$3"
+       local actual_status="$4"
+       local body="$5"
 
        echo "$body"
        echo ""
@@ -165,11 +263,38 @@ Input can be provided in several ways:
        if [ "$actual_status" = "$expected_status" ]; then
            echo -e "${GREEN}✓ PASSED${NC} [HTTP Status: $actual_status]"
            TESTS_PASSED=$((TESTS_PASSED + 1))
+           record_result "$test_id" "$test_desc" "$expected_status" "$actual_status" "PASS"
        else
            echo -e "${RED}✗ FAILED${NC} [HTTP Status: $actual_status, Expected: $expected_status]"
            TESTS_FAILED=$((TESTS_FAILED + 1))
+           record_result "$test_id" "$test_desc" "$expected_status" "$actual_status" "FAIL"
        fi
        echo ""
+   }
+
+   # Print final results table
+   print_results_table() {
+       echo ""
+       echo -e "${CYAN}┌─────────────────────────────────────────────────────────────────────────────┐${NC}"
+       echo -e "${CYAN}│                         TEST RESULTS SUMMARY                                │${NC}"
+       echo -e "${CYAN}├──────────┬────────────────────────────────┬──────────┬──────────┬──────────┤${NC}"
+       echo -e "${CYAN}│ Test ID  │ Description                    │ Expected │ Actual   │ Result   │${NC}"
+       echo -e "${CYAN}├──────────┼────────────────────────────────┼──────────┼──────────┼──────────┤${NC}"
+       
+       for i in "${!TEST_IDS[@]}"; do
+           local result_color="${GREEN}"
+           if [ "${TEST_RESULTS[$i]}" = "FAIL" ]; then
+               result_color="${RED}"
+           fi
+           printf "${CYAN}│${NC} %-8s ${CYAN}│${NC} %-30s ${CYAN}│${NC} %-8s ${CYAN}│${NC} %-8s ${CYAN}│${NC} ${result_color}%-8s${NC} ${CYAN}│${NC}\n" \
+               "${TEST_IDS[$i]}" \
+               "${TEST_DESCRIPTIONS[$i]:0:30}" \
+               "${EXPECTED_STATUS[$i]}" \
+               "${ACTUAL_STATUS[$i]}" \
+               "${TEST_RESULTS[$i]}"
+       done
+       
+       echo -e "${CYAN}└──────────┴────────────────────────────────┴──────────┴──────────┴──────────┘${NC}"
    }
 
    # -----------------------------------------------------------------------------
@@ -209,10 +334,11 @@ Input can be provided in several ways:
    # -----------------------------------------------------------------------------
    # AC[N]: [Acceptance Criterion Description]
    # -----------------------------------------------------------------------------
-   TEST_NAME="AC[N]: [Short Description]"
+   TEST_ID="AC[N]"
+   TEST_DESC="[Short Description]"
    EXPECTED="[Expected HTTP Status]"
    TESTS_TOTAL=$((TESTS_TOTAL + 1))
-   print_test_header "$TEST_NAME"
+   print_test_header "$TEST_ID: $TEST_DESC"
    print_expected "HTTP $EXPECTED"
    print_result
    HTTP_CODE=$(curl -s -o /tmp/response.txt -w "%{http_code}" -X [METHOD] "${BASE_URL}/api/[endpoint]" \
@@ -220,7 +346,7 @@ Input can be provided in several ways:
        -m 10 \
        -d '{"[field]": "[value]"}')
    BODY=$(cat /tmp/response.txt)
-   check_result "$TEST_NAME" "$EXPECTED" "$HTTP_CODE" "$BODY"
+   check_result "$TEST_ID" "$TEST_DESC" "$EXPECTED" "$HTTP_CODE" "$BODY"
    ```
 
 5. **Add edge case and negative tests**
@@ -233,10 +359,11 @@ Input can be provided in several ways:
    # -----------------------------------------------------------------------------
 
    # Edge Case: Zero tokens
-   TEST_NAME="Edge Case: Zero Token Count"
+   TEST_ID="EDGE1"
+   TEST_DESC="Zero Token Count"
    EXPECTED="[Expected Status]"
    TESTS_TOTAL=$((TESTS_TOTAL + 1))
-   print_test_header "$TEST_NAME"
+   print_test_header "$TEST_ID: $TEST_DESC"
    print_expected "HTTP $EXPECTED"
    print_result
    HTTP_CODE=$(curl -s -o /tmp/response.txt -w "%{http_code}" -X POST "${BASE_URL}/api/[endpoint]" \
@@ -244,13 +371,14 @@ Input can be provided in several ways:
        -m 10 \
        -d '{"tokenCount": 0}')
    BODY=$(cat /tmp/response.txt)
-   check_result "$TEST_NAME" "$EXPECTED" "$HTTP_CODE" "$BODY"
+   check_result "$TEST_ID" "$TEST_DESC" "$EXPECTED" "$HTTP_CODE" "$BODY"
 
    # Edge Case: Missing required field
-   TEST_NAME="Edge Case: Missing Required Field"
+   TEST_ID="EDGE2"
+   TEST_DESC="Missing Required Field"
    EXPECTED="400"
    TESTS_TOTAL=$((TESTS_TOTAL + 1))
-   print_test_header "$TEST_NAME"
+   print_test_header "$TEST_ID: $TEST_DESC"
    print_expected "HTTP $EXPECTED"
    print_result
    HTTP_CODE=$(curl -s -o /tmp/response.txt -w "%{http_code}" -X POST "${BASE_URL}/api/[endpoint]" \
@@ -258,20 +386,21 @@ Input can be provided in several ways:
        -m 10 \
        -d '{}')
    BODY=$(cat /tmp/response.txt)
-   check_result "$TEST_NAME" "$EXPECTED" "$HTTP_CODE" "$BODY"
+   check_result "$TEST_ID" "$TEST_DESC" "$EXPECTED" "$HTTP_CODE" "$BODY"
 
    # Edge Case: Invalid ID format
-   TEST_NAME="Edge Case: Invalid ID Format"
+   TEST_ID="EDGE3"
+   TEST_DESC="Invalid ID Format"
    EXPECTED="404"
    TESTS_TOTAL=$((TESTS_TOTAL + 1))
-   print_test_header "$TEST_NAME"
+   print_test_header "$TEST_ID: $TEST_DESC"
    print_expected "HTTP $EXPECTED"
    print_result
    HTTP_CODE=$(curl -s -o /tmp/response.txt -w "%{http_code}" -X GET "${BASE_URL}/api/[endpoint]/invalid-id" \
        -H "Content-Type: application/json" \
        -m 10)
    BODY=$(cat /tmp/response.txt)
-   check_result "$TEST_NAME" "$EXPECTED" "$HTTP_CODE" "$BODY"
+   check_result "$TEST_ID" "$TEST_DESC" "$EXPECTED" "$HTTP_CODE" "$BODY"
    ```
 
 6. **Add cleanup and test summary footer**
@@ -292,6 +421,11 @@ Input can be provided in several ways:
    echo ""
    echo "Base URL: ${BASE_URL}"
    echo "Finished at: $(date)"
+   echo ""
+   
+   # Print structured results table
+   print_results_table
+   
    echo ""
    echo -e "Tests Passed: ${GREEN}${TESTS_PASSED}${NC}"
    echo -e "Tests Failed: ${RED}${TESTS_FAILED}${NC}"
@@ -342,6 +476,11 @@ Input can be provided in several ways:
    - Plans: [count]
    - [Other entities]: [count]
 
+   👀 Human Review Features:
+   - Test case overview table at script top (view before running)
+   - Results summary table after execution (expected vs actual)
+   - Each test has unique ID for easy tracking
+
    📈 Test result tracking:
    - Pass/Fail counters with color-coded output
    - Pass rate percentage calculation
@@ -359,6 +498,8 @@ Input can be provided in several ways:
 **Output**
 
 A self-contained, executable shell script (`scripts/test-api.sh`) with:
+- **Structured test case table at script top** - Human-reviewable overview of all scenarios
+- **Structured results table after execution** - Expected vs actual with pass/fail status
 - cURL commands for all acceptance criteria scenarios
 - Edge case and negative test scenarios
 - Clear test output formatting
@@ -374,6 +515,8 @@ A self-contained, executable shell script (`scripts/test-api.sh`) with:
 
 | Requirement | Implementation |
 |-------------|----------------|
+| **Test case overview table** | Commented table at script top showing all scenarios, inputs, expected outputs |
+| **Results summary table** | `print_results_table` function showing expected vs actual after execution |
 | Timeout | `-m 10` on every curl command |
 | No external dependencies | Pure bash + curl, no jq/yq |
 | HTTP status capture | `-o /tmp/response.txt -w "%{http_code}"` (NOT eval-based) |
