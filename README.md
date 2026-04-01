@@ -216,8 +216,10 @@ openspdd --tool github-copilot <command>
 .github/
 ├── copilot-instructions.md     # Main instruction file (auto-merged with markers)
 └── copilot-prompts/
+    ├── spdd-analysis.md
     ├── spdd-reasons-canvas.md
     ├── spdd-generate.md
+    ├── spdd-prompt-update.md
     └── spdd-sync.md
 ```
 
@@ -225,12 +227,13 @@ openspdd --tool github-copilot <command>
 
 ### Core Commands
 
-| Command               | Description                                     |
-| --------------------- | ----------------------------------------------- |
-| `spdd-generate`       | Generate code from structured SPDD prompt files |
-| `spdd-sync`           | Sync code changes back to SPDD prompt files     |
-| `spdd-reasons-canvas` | Generate REASONS-Canvas structured prompts      |
-| `spdd-analysis`       | Strategic analysis of requirements              |
+| Command               | Description                                                    |
+| --------------------- | -------------------------------------------------------------- |
+| `spdd-analysis`       | Strategic analysis of requirements                             |
+| `spdd-reasons-canvas` | Generate REASONS-Canvas structured prompts                     |
+| `spdd-generate`       | Generate code from structured SPDD prompt files                |
+| `spdd-prompt-update`  | Update existing SPDD prompt with new requirements              |
+| `spdd-sync`           | Sync code changes back to SPDD prompt files                    |
 
 ### Tool-Specific Commands
 
@@ -238,14 +241,22 @@ openspdd --tool github-copilot <command>
 | -------------- | ----------------------- | --------------------------------- |
 | GitHub Copilot | `copilot-instructions`  | Main instruction file for Copilot |
 
-### Optional Commands
+### Optional Commands (Beta)
+
+The following commands are available as beta — not installed by default, but can be installed manually:
+
+| Command               | Description                                                                |
+| --------------------- | -------------------------------------------------------------------------- |
+| `spdd-code-review`    | Review code against REASONS-Canvas, detecting intent drift and violations  |
+| `spdd-api-test`       | Generate self-contained shell scripts with cURL commands for API testing   |
 
 ```bash
-# List optional commands
+# List all optional commands
 openspdd list --optional
 
 # Install a specific optional command
-openspdd generate <optional-command-name>
+openspdd generate spdd-code-review
+openspdd generate spdd-api-test
 ```
 
 ## Plan vs REASONS Canvas: An Example
