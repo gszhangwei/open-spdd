@@ -255,6 +255,7 @@ openspdd --tool github-copilot <command>
 
 | 命令                  | 描述                                                                   |
 | --------------------- | ---------------------------------------------------------------------- |
+| `spdd-story`          | 将功能需求拆解为符合 INVEST 原则的 Story，含验收标准                   |
 | `spdd-code-review`    | 对照 REASONS-Canvas 审查代码，检测意图偏移与约束违规                   |
 | `spdd-api-test`       | 生成基于 cURL 的自包含 API 测试脚本                                    |
 
@@ -263,6 +264,7 @@ openspdd --tool github-copilot <command>
 openspdd list --optional
 
 # 安装特定可选命令
+openspdd generate spdd-story
 openspdd generate spdd-code-review
 openspdd generate spdd-api-test
 ```

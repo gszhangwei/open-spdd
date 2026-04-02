@@ -245,16 +245,18 @@ openspdd --tool github-copilot <command>
 
 The following commands are available as beta — not installed by default, but can be installed manually:
 
-| Command               | Description                                                                |
-| --------------------- | -------------------------------------------------------------------------- |
-| `spdd-code-review`    | Review code against REASONS-Canvas, detecting intent drift and violations  |
-| `spdd-api-test`       | Generate self-contained shell scripts with cURL commands for API testing   |
+| Command               | Description                                                                            |
+| --------------------- | -------------------------------------------------------------------------------------- |
+| `spdd-story`          | Decompose feature requirements into INVEST-compliant stories with acceptance criteria  |
+| `spdd-code-review`    | Review code against REASONS-Canvas, detecting intent drift and violations              |
+| `spdd-api-test`       | Generate self-contained shell scripts with cURL commands for API testing               |
 
 ```bash
 # List all optional commands
 openspdd list --optional
 
 # Install a specific optional command
+openspdd generate spdd-story
 openspdd generate spdd-code-review
 openspdd generate spdd-api-test
 ```
