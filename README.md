@@ -2,7 +2,7 @@
 
 > **Structured Prompt-Driven Development** — Transform AI coding prompts into executable design contracts
 
-[中文文档](README.zh-CN.md)
+[Chinese](README.zh-CN.md) | [Design Philosophy](docs/design-philosophy.md)
 
 OpenSPDD is a methodology and cross-platform CLI tool for the AI coding era. It upgrades AI coding prompts from "disposable inputs" to "executable design contracts" with bidirectional synchronization between design and implementation.
 
@@ -10,14 +10,14 @@ OpenSPDD is a methodology and cross-platform CLI tool for the AI coding era. It 
 
 Existing AI coding tools generate plan documents, but these documents have fundamental limitations:
 
-| Problem | Typical Plan Documents | REASONS Canvas |
-|---------|------------------------|----------------|
-| **Nature** | Task list | Design contract |
-| **Constraints** | None — AI improvises freely | Explicit — Norms define "how", Safeguards define "what not to do" |
-| **Detail Level** | High-level: *"Create BillingService"* | Precise: *method signatures, parameters, error handling, DI patterns* |
-| **Traceability** | None — docs don't update with code | Yes — `/spdd-sync` enables reverse sync |
-| **Validation** | Vague — *"done when complete"* | Explicit — exact error messages, HTTP status codes in Safeguards |
-| **Dependencies** | Implicit — AI infers | Explicit — Operations define strict execution order |
+| Problem          | Typical Plan Documents                | REASONS Canvas                                                        |
+| ---------------- | ------------------------------------- | --------------------------------------------------------------------- |
+| **Nature**       | Task list                             | Design contract                                                       |
+| **Constraints**  | None — AI improvises freely           | Explicit — Norms define "how", Safeguards define "what not to do"     |
+| **Detail Level** | High-level: _"Create BillingService"_ | Precise: _method signatures, parameters, error handling, DI patterns_ |
+| **Traceability** | None — docs don't update with code    | Yes — `/spdd-sync` enables reverse sync                               |
+| **Validation**   | Vague — _"done when complete"_        | Explicit — exact error messages, HTTP status codes in Safeguards      |
+| **Dependencies** | Implicit — AI infers                  | Explicit — Operations define strict execution order                   |
 
 **The core insight**: Plans are "suggestions", REASONS Canvas is a "contract".
 
@@ -42,6 +42,7 @@ REASONS Canvas is a 7-dimensional structured design framework:
 ```
 
 **Why 7 dimensions?**
+
 - **R+E+A** = Design decisions ("Why" and "What")
 - **S+O** = Implementation path ("How")
 - **N+S** = Quality guardrails
@@ -78,7 +79,7 @@ All three are essential: without N+S, AI improvises; without S+O, AI restructure
 └─────────────────────────────────────────────────────────────────────┘
 ```
 
-**Key principle**: *"When reality diverges, fix the prompt first — then update the code."*
+**Key principle**: _"When reality diverges, fix the prompt first — then update the code."_
 
 ## Features
 
@@ -203,11 +204,11 @@ openspdd --tool github-copilot <command>
 
 ## Supported Environments
 
-| Tool           | Detection                                              | Config Directory           |
-| -------------- | ------------------------------------------------------ | -------------------------- |
-| Cursor         | `.cursor/`, `.cursorrules`                             | `.cursor/commands/`        |
-| Claude Code    | `.claude/`, `CLAUDE.md`                                | `.claude/commands/`        |
-| Antigravity    | `.antigravity/`                                        | `.antigravity/commands/`   |
+| Tool           | Detection                                                     | Config Directory           |
+| -------------- | ------------------------------------------------------------- | -------------------------- |
+| Cursor         | `.cursor/`, `.cursorrules`                                    | `.cursor/commands/`        |
+| Claude Code    | `.claude/`, `CLAUDE.md`                                       | `.claude/commands/`        |
+| Antigravity    | `.antigravity/`                                               | `.antigravity/commands/`   |
 | GitHub Copilot | `.github/copilot-instructions.md`, `.github/copilot-prompts/` | `.github/copilot-prompts/` |
 
 ### GitHub Copilot File Structure
@@ -227,29 +228,29 @@ openspdd --tool github-copilot <command>
 
 ### Core Commands
 
-| Command               | Description                                                    |
-| --------------------- | -------------------------------------------------------------- |
-| `spdd-analysis`       | Strategic analysis of requirements                             |
-| `spdd-reasons-canvas` | Generate REASONS-Canvas structured prompts                     |
-| `spdd-generate`       | Generate code from structured SPDD prompt files                |
-| `spdd-prompt-update`  | Update existing SPDD prompt with new requirements              |
-| `spdd-sync`           | Sync code changes back to SPDD prompt files                    |
+| Command               | Description                                       |
+| --------------------- | ------------------------------------------------- |
+| `spdd-analysis`       | Strategic analysis of requirements                |
+| `spdd-reasons-canvas` | Generate REASONS-Canvas structured prompts        |
+| `spdd-generate`       | Generate code from structured SPDD prompt files   |
+| `spdd-prompt-update`  | Update existing SPDD prompt with new requirements |
+| `spdd-sync`           | Sync code changes back to SPDD prompt files       |
 
 ### Tool-Specific Commands
 
-| Tool           | Command                 | Description                       |
-| -------------- | ----------------------- | --------------------------------- |
-| GitHub Copilot | `copilot-instructions`  | Main instruction file for Copilot |
+| Tool           | Command                | Description                       |
+| -------------- | ---------------------- | --------------------------------- |
+| GitHub Copilot | `copilot-instructions` | Main instruction file for Copilot |
 
 ### Optional Commands (Beta)
 
 The following commands are available as beta — not installed by default, but can be installed manually:
 
-| Command               | Description                                                                            |
-| --------------------- | -------------------------------------------------------------------------------------- |
-| `spdd-story`          | Decompose feature requirements into INVEST-compliant stories with acceptance criteria  |
-| `spdd-code-review`    | Review code against REASONS-Canvas, detecting intent drift and violations              |
-| `spdd-api-test`       | Generate self-contained shell scripts with cURL commands for API testing               |
+| Command            | Description                                                                           |
+| ------------------ | ------------------------------------------------------------------------------------- |
+| `spdd-story`       | Decompose feature requirements into INVEST-compliant stories with acceptance criteria |
+| `spdd-code-review` | Review code against REASONS-Canvas, detecting intent drift and violations             |
+| `spdd-api-test`    | Generate self-contained shell scripts with cURL commands for API testing              |
 
 ```bash
 # List all optional commands
@@ -266,6 +267,7 @@ openspdd generate spdd-api-test
 **Scenario**: Implement user registration
 
 **Typical Plan**:
+
 ```
 1. Create UserRegistrationController
 2. Create UserRegistrationService
@@ -275,6 +277,7 @@ openspdd generate spdd-api-test
 ```
 
 **REASONS Canvas (Operations excerpt)**:
+
 ```markdown
 ### Create UserRegistrationService - `UserRegistrationServiceImpl`
 
@@ -302,14 +305,14 @@ openspdd generate spdd-api-test
 
 ## When to Use OpenSPDD
 
-| Scenario | Recommendation | Reason |
-|----------|----------------|--------|
+| Scenario                       | Recommendation     | Reason                                                        |
+| ------------------------------ | ------------------ | ------------------------------------------------------------- |
 | Enterprise feature development | Highly recommended | Design-implementation traceability, long-term maintainability |
-| Team collaboration | Highly recommended | Unified AI coding standards, reduced style conflicts |
-| Complex refactoring | Recommended | Strict Operations order prevents dependency chaos |
-| Cross-tool workflows | Recommended | Same REASONS Canvas works across different AI tools |
-| Quick prototypes | Consider | May be overhead, but valuable if maintenance is needed |
-| One-off scripts | Not recommended | ROI too low |
+| Team collaboration             | Highly recommended | Unified AI coding standards, reduced style conflicts          |
+| Complex refactoring            | Recommended        | Strict Operations order prevents dependency chaos             |
+| Cross-tool workflows           | Recommended        | Same REASONS Canvas works across different AI tools           |
+| Quick prototypes               | Consider           | May be overhead, but valuable if maintenance is needed        |
+| One-off scripts                | Not recommended    | ROI too low                                                   |
 
 ## Building from Source
 
