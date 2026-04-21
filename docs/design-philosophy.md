@@ -1,6 +1,6 @@
 # AI Isn't Lacking Intelligence — It Has Too Many "Ideas"
 
-> The stronger the model, the more you need to spell out your intent and boundaries
+> You ask it to add a small feature, and it casually "optimizes" your core logic on the side; the code runs, but the design direction is completely off. In complex business development, what is the root cause of frequent rework with AI coding? This article unpacks the "control problem" of AI coding and shares an open-source solution based on structured prompts (OpenSPDD). The stronger the model, the more you need to spell out your intent and boundaries.
 
 ## A Counterintuitive Observation
 
@@ -30,13 +30,15 @@ Improvements in AI coding can happen along two dimensions:
 
 **Control dimension** — How to ensure AI's understanding aligns with your intent, how to pick the one you want among multiple "correct" solutions, how to define what must not be done.
 
-These two dimensions overlap but are not identical. Capability improvements can indeed alleviate some control problems — larger context windows, persistent memory, and better conversational clarification are all improving AI's understanding of design intent. But there is a class of control needs that capability improvements alone cannot eliminate: when multiple "correct" solutions exist, choosing which one is a human decision, not an AI inference; and this decision needs to be recorded, shared, and continuously maintained, otherwise the next conversation, the next team member, the next Agent all need to make it again from scratch.
+These two dimensions overlap but are not identical. Capability improvements can indeed alleviate some control problems — larger context windows, persistent memory, and better conversational clarification are all improving AI's understanding of design intent. But there is a class of control needs that capability improvements alone cannot eliminate: when multiple "correct" solutions exist, choosing which one is a human trade-off decision, not an AI logical inference.
 
-A senior architect's capability is beyond question. Why do enterprises still require them to write design documents? Not because their capability is insufficient, but because teams need shared understanding, decisions need traceability, and future maintainers need context. Similarly, no matter how intelligent aircraft autopilot becomes, flight plans won't disappear — not because autopilot isn't good enough, but because air traffic control, crew, and dispatch need a shared, verifiable coordination baseline.
+This separation between "decision trade-offs" and "concrete implementation" is not a new proposition that emerged with the AI era. As far back as 1986, when Fred Brooks examined "essential complexity" versus "accidental complexity," he sharply pointed out that the hardest part of software has never been coding, but specification and design.
 
-The control problem is not new to the AI coding era. When Fred Brooks distinguished "essential complexity" from "accidental complexity" in 1986, he pointed out that the hardest part of software is not coding but specification and design; practices like ADR (Architecture Decision Record) and Design by Contract also address "how to externalize and communicate design decisions."
+This also explains why, in collaboration among human developers, "capability" can never replace "control." Take a senior architect: their coding capability is beyond doubt, yet enterprises still require them to produce design documents and accumulate ADRs (Architecture Decision Records). Because no matter how smart they are, the team needs shared understanding, decisions need traceability, and future maintainers need context. Similarly, no matter how intelligent aircraft autopilot becomes, flight plans won't disappear — not because autopilot capability is lacking, but because the entire collaboration system needs a shared, verifiable baseline.
 
-But AI coding makes this old problem more urgent — not because the absolute cost of rework is higher (AI can regenerate quickly), but because deviations are more subtle. AI-generated code typically has decent quality, consistent style, and passes compilation and basic tests, making it easy to pass a cursory review. Deviations in design direction — using the wrong architectural pattern, doing things that shouldn't have been done — are often not discovered until later iterations or even after deployment, when the cost of correction is truly high.
+Now, as AI approaches and even surpasses human experts in coding capability, it inevitably inherits the same collaboration dilemma: undocumented decisions need to be made all over again whenever you switch Agents or open a new conversation.
+
+If anything, AI makes this old problem more urgent. Not because the absolute cost of rework is higher (AI can regenerate quickly), but because deviations are more subtle. AI-generated code typically has decent quality and consistent style, making it easy to pass a cursory review. But deviations in design direction — using the wrong architectural pattern, doing things that shouldn't have been done — are often not exposed until later iterations or even after deployment, when the cost of correction is truly high.
 
 This article does not attempt to offer new theoretical insights. It focuses on a practical question: how can these known control needs be operationalized into actionable workflows within the AI coding toolchain?
 
@@ -254,7 +256,7 @@ Some might think: I don't need this much upfront structure; just let AI do it an
 
 "Structured prompts" is a philosophy, not a fixed format. The industry already has multiple practices: Kiro's three-tier structure of requirements/design/tasks, Claude's CLAUDE.md, Codex's AGENTS.md, traditional ADR. These practices have different emphases but all address the same class of problem.
 
-What OpenSPDD's REASONS Canvas attempts to do is integrate these scattered concerns into a unified framework embeddable in the AI coding toolchain — a 7-dimension checklist:
+What OpenSPDD's REASONS Canvas attempts to do is integrate these scattered concerns into an AI-executable, unified framework embeddable in the AI coding toolchain — a 7-dimension checklist:
 
 ```
 ┌─────────────────────────────────────────────────────────────────────┐
@@ -375,9 +377,11 @@ We need an honest discussion of the applicable boundaries of structured prompts 
 
 Structured prompts are externalization tools for important decisions, not a universal method for all AI coding tasks. Overuse actually increases cognitive burden, the same problem as "over-engineering" in traditional software engineering.
 
-There is also a question that must be addressed head-on: **Structured prompts themselves can also become outdated.** Earlier, we used "the v1.0 Plan is already outdated by v1.1" to argue that design intent is easily lost, but the same criticism applies entirely to REASONS Canvas — if the code changes but the Canvas doesn't get updated, it transforms from a "design guide" into "misleading outdated documentation," which is more dangerous than no documentation at all.
+There is also a question that must be addressed head-on: **Do structured prompts themselves also become outdated?**
 
-This is not a problem to be glossed over. Frankly, bidirectional synchronization between design specifications and code is one of the biggest engineering challenges today, and no solution has fully solved it. Our current approach is: after each feature iteration, manually run `/spdd-sync` to have AI detect code changes and update the corresponding Canvas. This isn't yet a mandatory process, more of a team convention — "after changing the code, sync the spec while you're at it." It's not perfect, but it works in practice: changes to key decisions are basically captured, and the Canvas doesn't become seriously outdated. The future direction is to automate this step — for example, automatically triggering sync detection after each code update, and if changes are found, automatically updating the corresponding Canvas.
+Earlier, we used "the v1.0 Plan is already outdated by v1.1" to argue that design intent is easily lost, but the same criticism applies entirely to REASONS Canvas — if the code changes but the Canvas doesn't get updated, it transforms from a "design guide" into "misleading outdated documentation," which is more dangerous than no documentation at all.
+
+This is not a problem to be glossed over. Frankly, bidirectional synchronization between design specifications and code is one of the biggest engineering challenges today, and no solution has fully solved it. Our current approach is: after each feature iteration, manually run `/spdd-sync` (a command provided by OpenSPDD) to have AI detect code changes and update the corresponding structured prompts. This isn't yet a mandatory process, more of a team convention — "after changing the code, sync the spec while you're at it." It's not perfect, but it works in practice: changes to key decisions are basically captured, and the structured prompts don't become outdated. The future direction is to automate this step — for example, automatically triggering sync detection after each code update, and if changes are found, automatically updating the corresponding structured prompts.
 
 ## Looking Ahead
 
@@ -397,7 +401,7 @@ There's a seemingly contradictory point here: if AI can ultimately generate and 
 
 My understanding is: what changes is the "author" — from humans writing, to AI writing with human review, to AI maintaining autonomously. What doesn't change is the "need" — complex systems always need some form of structured, shareable, traceable intermediate artifacts to coordinate the actions of multiple participants. Just as compilers automatically generating machine code doesn't mean instruction sets can disappear, AI automatically generating design specifications doesn't mean the specifications themselves become unimportant. Only the mode of production changes; the necessity of existence doesn't.
 
-Perhaps in the future it won't be called a prompt anymore. Perhaps it will evolve into a DSL, decision records, executable specs, or auto-syncing contract files. But the need behind it won't disappear.
+Perhaps in the future it won't be called a prompt anymore. Perhaps it will evolve into more specialized concepts like Agent DSLs, Agent decision records, Agent-executable specs, or Agent auto-syncing contract files. But the need behind it won't disappear.
 
 ## Conclusion
 
@@ -428,10 +432,12 @@ You don't need OpenSPDD; you can start right now:
 
 ### Experience OpenSPDD
 
-If you want to try a more structured approach with REASONS Canvas:
+If you want to try OpenSPDD's more structured, systematic approach:
 
 ```bash
-brew install gszhangwei/tools/openspdd
+brew install gszhangwei/tools/openspdd          # macOS
+go install github.com/gszhangwei/open-spdd@latest   # non-macOS, requires Go
+
 cd your-project
 openspdd generate --all    # Generate SPDD commands
 
@@ -466,4 +472,4 @@ These questions have no standard answers and need to be explored through practic
 
 ---
 
-*This article explores the value and limitations of structured design intent expression in the AI coding era. [OpenSPDD](https://github.com/gszhangwei/open-spdd) is one such attempt — feel free to try it and share your feedback.*
+_This article explores the value and limitations of structured design intent expression in the AI coding era. [OpenSPDD](https://github.com/gszhangwei/open-spdd) is one such attempt — feel free to try it and share your feedback._
