@@ -2,7 +2,12 @@
 
 ## Requirements
 
-Implement self-identification and self-removal capabilities in the `openspdd` CLI so that users can answer two questions without leaving the terminal: *"which version am I running?"* and *"how do I cleanly remove this tool?"*. The first capability surfaces build metadata that is already injected by the release pipeline but is currently dropped on the floor. The second capability detects how the running binary was installed (Homebrew via the project's tap, or `go install` into `$GOBIN`) and then either shells out to the matching package manager or removes the binary file directly — always after explicit user confirmation, never touching files outside openspdd's own footprint, and always degrading to clear manual instructions when auto-removal is not safe.
+Implement self-identification and self-removal capabilities in the `openspdd` CLI so that users can answer two questions without leaving the terminal: *"which version am I running?"* and *"how do I cleanly remove this tool?"*. The first capability surfaces build metadata that is already injected by the release pipeline but is currently dropped on the floor, AND must additionally cover users who installed via `go install module@vX.Y.Z` (where the goreleaser ldflag is bypassed entirely) by reading the version from the Go toolchain's embedded build info at runtime. The second capability detects how the running binary was installed (Homebrew via the project's tap, or `go install` into `$GOBIN`) and then either shells out to the matching package manager or removes the binary file directly — always after explicit user confirmation, never touching files outside openspdd's own footprint, and always degrading to clear manual instructions when auto-removal is not safe.
+
+Version resolution priority (binding for the `-v` / `--version` flag):
+1. The goreleaser-injected `-X main.version=<tag>` ldflag value, if non-empty and not the literal `"dev"` (release builds: Homebrew, GitHub release tarballs).
+2. The Go toolchain's `runtime/debug.BuildInfo`'s `Main.Version`, if non-empty and not the placeholder `"(devel)"` (`go install module@vX.Y.Z` builds, including `@latest` and pseudo-versions for `@main`).
+3. The literal `"dev"` (local `go run` / `go build` from source).
 
 Boundaries:
 - **In scope**: a `-v` / `--version` flag on `openspdd`; an `uninstall` subcommand covering Homebrew and `go install`; cleanup of openspdd's own residual config-marker file; clear fallback messaging when the install method is ambiguous or when the platform (Windows) cannot self-delete a running binary.
@@ -96,8 +101,11 @@ UninstallExecutor --> UninstallPlan : executes
    - **Strategy**: leverage Cobra's built-in `Version` field on `rootCmd`, and override the auto-generated `version` flag so it gains a `-v` short alias. Customize the version output template so the message is a single line: `openspdd <version>`.
    - **Build-time injection**: keep the variable in `cmd/openspdd/main.go` (named `version`) to honor the existing `.goreleaser.yaml` ldflag `-X main.version={{.Version}}`. No goreleaser change required.
    - **Default value**: the variable is initialized to `"dev"` so plain `go build` / `go run` produces a sensible value.
-   - **Wiring direction**: `main` calls a one-line setter `cmd.SetVersion(version)` before `cmd.Execute()`. `SetVersion` assigns to `rootCmd.Version` and replaces the cobra-auto `version` flag with a `BoolVarP(&versionFlag, "version", "v", false, "...")` definition (or, if Cobra already added the flag, looks it up and sets `Shorthand = "v"`).
-   - **Side-effect fix**: the Homebrew formula's smoke test `system "#{bin}/openspdd", "--version"` becomes correct.
+   - **`go install` fallback (closes the version-resolution gap)**: when `version` retains its compile-time default — empty or the literal `"dev"`, indicating no ldflag was applied — `main` consults `runtime/debug.ReadBuildInfo()` and substitutes `bi.Main.Version` if it is non-empty and not the placeholder `"(devel)"`. The Go toolchain stamps `Main.Version` automatically for `go install module@vX.Y.Z` builds (including `@latest` resolution and `@main` pseudo-versions), so this path covers every install method that bypasses goreleaser without requiring any release-pipeline change.
+   - **Resolver location**: the resolver and its build-info seam live in the importable `cmd` package (new file `cmd/version.go`), NOT in `package main`. `package main` cannot be imported by external `_test` packages, and the project's testing convention places all unit tests under `tests/<package>/` (see `tests/cmd/root_test.go`, `tests/cmd/version_test.go`); putting the resolver in `cmd` is therefore the only way Operation 14's tests can sit alongside the rest of the external-test suite. `cmd/openspdd/main.go` retains only the `version` package-level variable (still required by `.goreleaser.yaml`'s `-X main.version=...` ldflag) and the two-line wiring call.
+   - **Test seam**: `var readBuildInfo = debug.ReadBuildInfo` lives at package level in `cmd/version.go` (unexported). External test code under `tests/cmd/` swaps it via the exported helper `cmd.SetReadBuildInfoForTest(f) restore` (analogous to `cmd.RootCommand()`); production code never reassigns the seam directly. Mirrors the `var execCommand = exec.Command` test-seam pattern used by the uninstall executor (Operation 7), with the seam swap mediated by an exported helper because the test package is external.
+   - **Wiring direction**: `main` calls the exported pure resolver `cmd.ResolveVersion(version)` and passes the result to `cmd.SetVersion(...)` before `cmd.Execute()`. `SetVersion` assigns to `rootCmd.Version` and replaces the cobra-auto `version` flag with a `BoolVarP(&versionFlag, "version", "v", false, "...")` definition (or, if Cobra already added the flag, looks it up and sets `Shorthand = "v"`).
+   - **Side-effect fix**: the Homebrew formula's smoke test `system "#{bin}/openspdd", "--version"` becomes correct, AND `go install module@vX.Y.Z` builds report the actual installed tag instead of `dev`.
 
 2. **Install Method Detection**:
    - **Strategy**: classify by the *resolved* path of the running binary (`os.Executable` + `filepath.EvalSymlinks`). The classification rules:
@@ -142,7 +150,7 @@ UninstallExecutor --> UninstallPlan : executes
 
 ### Dependencies
 
-1. `cmd/openspdd/main.go` depends on `cmd` package (already does) and additionally calls `cmd.SetVersion(version)`.
+1. `cmd/openspdd/main.go` depends on the `cmd` package (already does) and additionally calls `cmd.SetVersion(cmd.ResolveVersion(version))`. The `runtime/debug` standard-library import lives in `cmd/version.go` (new file in the `cmd` package), not in `cmd/openspdd/main.go`. No third-party dependency added; `go.mod` does not change.
 2. `cmd/root.go` exposes `SetVersion(string)` and configures `rootCmd.Version` + the `version` flag's `-v` shortcut.
 3. `cmd/uninstall.go` depends on:
    - `os`, `os/exec`, `path/filepath`, `runtime`, `strings`, `fmt` — standard library.
@@ -153,8 +161,8 @@ UninstallExecutor --> UninstallPlan : executes
 
 ### Layered Architecture
 
-1. **Entry Layer** (`cmd/openspdd/main.go`): owns the package-level `version` string. Calls `cmd.SetVersion(version)`, then `cmd.Execute()`.
-2. **CLI / Wiring Layer** (`cmd/root.go`): owns Cobra's `rootCmd`. Provides `SetVersion(string)` to inject the build-time version. Owns the `--version` / `-v` flag wiring and the version output template.
+1. **Entry Layer** (`cmd/openspdd/main.go`): owns ONLY the package-level `version` string (kept here so `.goreleaser.yaml`'s `-X main.version=...` ldflag continues to bind correctly). Calls `cmd.SetVersion(cmd.ResolveVersion(version))`, then `cmd.Execute()`. No other logic — no resolver, no seam, no `runtime/debug` import.
+2. **CLI / Wiring Layer** (`cmd/root.go`, `cmd/version.go`): owns Cobra's `rootCmd` and the version-resolution logic. `cmd/root.go` provides `SetVersion(string)` to inject the build-time version, owns the `--version` / `-v` flag wiring, and the version output template. `cmd/version.go` (new) provides the exported pure function `ResolveVersion(injected string) string` (three-tier resolution chain: ldflag → `runtime/debug.BuildInfo` → default), the unexported package-level test seam `readBuildInfo = debug.ReadBuildInfo`, and the exported test helper `SetReadBuildInfoForTest(f) restore` so external test code under `tests/cmd/` can swap the seam without touching unexported state.
 3. **Subcommand Layer** (`cmd/uninstall.go`): the `uninstall` Cobra command, its flags, and its `Run` callback orchestrating detection → plan → confirm → execute.
 4. **Detection Layer** (`cmd/uninstall.go` helpers, optionally promoted to a small `internal/installinfo` package if reuse demand grows): functions `detectInstallContext()`, `classifyByPath()`, `findGoBin()`. Pure (no I/O side effects beyond reading `os.Executable`, `go env`, and filesystem stat).
 5. **Planning Layer** (`cmd/uninstall.go`): `buildPlan(ctx InstallContext) UninstallPlan`. Pure transformation, easy to unit-test.
@@ -164,32 +172,93 @@ UninstallExecutor --> UninstallPlan : executes
 
 ## Operations
 
-### Operation 1: Declare and inject `version` build-time variable
+### Operation 1: Declare `version` build-time variable and the version resolver (with `go install` build-info fallback)
 
-1. **Component type**: package-level variable in entry point.
-2. **File**: `cmd/openspdd/main.go`.
-3. **Responsibility**: hold the build-time version string injected by goreleaser via `-X main.version={{.Version}}`; provide a sane default for non-release builds; pass the value to the `cmd` package before invoking the CLI.
-4. **Changes**:
-   - Add a package-level variable: `var version = "dev"`.
-   - In `main()`, call `cmd.SetVersion(version)` *before* `cmd.Execute()`.
-5. **Resulting file content** (replace whole file):
+1. **Component type**: package-level variable in the entry point + new exported pure resolver, unexported test seam, and exported test helper in the importable `cmd` package.
+2. **Files**:
+   - `cmd/openspdd/main.go` (existing, modified) — minimal entry point.
+   - `cmd/version.go` (NEW) — resolver, seam, and test helper.
+3. **Responsibility**:
+   - `cmd/openspdd/main.go`: hold the build-time version string injected by goreleaser via `-X main.version={{.Version}}`, provide a sane default (`"dev"`) for non-release builds, and pass the resolved value to the `cmd` package before invoking the CLI.
+   - `cmd/version.go`: implement the three-tier resolution chain as a pure exported function so external tests under `tests/cmd/` (in `cmd_test` package) can exercise every branch through a controllable seam. The resolver lives here — NOT in `package main` — because `package main` cannot be imported by external `_test` packages, and the project's testing convention places all unit tests under `tests/<package>/`.
+4. **Changes in `cmd/openspdd/main.go`**:
+   - Keep the package-level variable: `var version = "dev"`.
+   - Replace the `main()` body so it calls `cmd.SetVersion(cmd.ResolveVersion(version))` and then `cmd.Execute()`.
+   - Do NOT import `runtime/debug` here — it lives in `cmd/version.go`.
+5. **Changes in `cmd/version.go` (new file in the `cmd` package)**:
+   - Add the unexported package-level test seam: `var readBuildInfo = debug.ReadBuildInfo`. Production code never reassigns this; tests reach it exclusively through the exported helper described below.
+   - Add the pure exported function `ResolveVersion(injected string) string` implementing the resolution priority chain specified in step 6.
+   - Add the exported test helper `func SetReadBuildInfoForTest(f func() (*debug.BuildInfo, bool)) func()` that swaps `readBuildInfo` for `f` and returns a restore closure. This is the *only* legitimate way external test code under `tests/cmd/` may substitute the seam. Mirrors the existing `cmd.RootCommand()` test-export pattern.
+   - Import `runtime/debug` (single new standard-library import; `go.mod` does not change).
+6. **`ResolveVersion` resolution priority** (in order; first match wins):
+   1. If `injected` is non-empty AND not equal to the literal `"dev"`, return `injected`. This is the goreleaser-built-binary path; the ldflag wins because it carries the official release tag.
+   2. Otherwise, call `readBuildInfo()`. If it returns `(bi, true)` AND `bi.Main.Version` is non-empty AND `bi.Main.Version != "(devel)"`, return `bi.Main.Version`. This is the `go install module@vX.Y.Z` path; pseudo-versions for `@main`-style installs (e.g., `v0.4.13-0.20260429154200-abcdef123456`) flow through unchanged so users see an honest version.
+   3. Otherwise, return `injected`. In production this is the literal `"dev"`, preserving the existing behavior for local `go run` / `go build` from source.
+7. **Resulting file shapes** (illustrative reference; the actual implementation is produced by `/spdd-generate`):
+
+   `cmd/openspdd/main.go`:
 
    ```go
    package main
 
    import "github.com/gszhangwei/open-spdd/cmd"
 
+   // version is overwritten at link time by goreleaser via -X main.version=<tag>.
+   // For `go install module@vX.Y.Z` builds (where goreleaser is not in the path),
+   // cmd.ResolveVersion recovers the version from runtime/debug.BuildInfo.
    var version = "dev"
 
    func main() {
-       cmd.SetVersion(version)
+       cmd.SetVersion(cmd.ResolveVersion(version))
        cmd.Execute()
    }
    ```
 
-6. **Constraints**:
-   - The variable name MUST remain exactly `version` (lowercase, no other identifier) — `.goreleaser.yaml` references `main.version` literally.
-   - The default value MUST NOT be empty; an empty default would make Cobra hide the version flag.
+   `cmd/version.go`:
+
+   ```go
+   package cmd
+
+   import "runtime/debug"
+
+   // readBuildInfo is a package-level seam so unit tests can substitute a fake.
+   // Production code MUST NOT reassign this; tests MUST go through
+   // SetReadBuildInfoForTest so the swap is reversible.
+   var readBuildInfo = debug.ReadBuildInfo
+
+   // ResolveVersion picks the most informative version string available, per the
+   // three-tier priority chain (ldflag → runtime/debug.BuildInfo → injected default).
+   func ResolveVersion(injected string) string {
+       if injected != "" && injected != "dev" {
+           return injected
+       }
+       if bi, ok := readBuildInfo(); ok {
+           if v := bi.Main.Version; v != "" && v != "(devel)" {
+               return v
+           }
+       }
+       return injected
+   }
+
+   // SetReadBuildInfoForTest swaps the runtime/debug.ReadBuildInfo seam used by
+   // ResolveVersion and returns a function that restores the previous value.
+   // Intended exclusively for tests under tests/cmd/. Production code MUST NOT call this.
+   func SetReadBuildInfoForTest(f func() (*debug.BuildInfo, bool)) func() {
+       prev := readBuildInfo
+       readBuildInfo = f
+       return func() { readBuildInfo = prev }
+   }
+   ```
+
+8. **Constraints**:
+   - The variable name in `cmd/openspdd/main.go` MUST remain exactly `version` (lowercase, no other identifier) — `.goreleaser.yaml` references `main.version` literally.
+   - The default value MUST NOT be empty; an empty default would still surface as `dev` after resolution but would also weaken the readability invariant the resolver relies on.
+   - `ResolveVersion` MUST be pure over its `injected` argument and the `readBuildInfo` seam — no I/O, no `os.Exit`, no panics, no logging.
+   - `ResolveVersion` MUST be safe to call concurrently (read-only over package vars). `SetReadBuildInfoForTest` MUST NOT be called concurrently with goroutines that may invoke `ResolveVersion`; tests are single-threaded with respect to the seam.
+   - The unexported `readBuildInfo` seam MUST NOT be reassigned outside of test code, and tests MUST go through `SetReadBuildInfoForTest` (they cannot reach the unexported variable directly from `cmd_test` anyway).
+   - `ResolveVersion` MUST tolerate `readBuildInfo` returning `(nil, false)` without panic — the `if ok` guard is mandatory.
+   - The function MUST treat the literal string `"(devel)"` as equivalent to "no version available", per Go's `runtime/debug` convention for builds with no module-version metadata.
+   - `cmd/openspdd/main.go` MUST NOT import `runtime/debug`. The build-info dependency lives entirely inside `cmd/version.go`.
 
 ### Operation 2: Wire `--version` / `-v` flag on rootCmd via `SetVersion`
 
@@ -530,6 +599,53 @@ UninstallExecutor --> UninstallPlan : executes
    - The test file MUST live in `tests/cmd/` and use the `cmd_test` package, consistent with existing tests.
    - The exported `RootCommand()` helper MUST be a one-line getter; it does not change runtime behavior.
 
+### Operation 14: Add tests for `ResolveVersion` build-info fallback
+
+1. **Component type**: unit tests for the exported pure function `cmd.ResolveVersion`, using the project's standard `cmd_test` external test package convention.
+2. **File**: `tests/cmd/version_resolve_test.go` (new). External `cmd_test` package, mirrors `tests/cmd/version_test.go` and `tests/cmd/root_test.go`. The resolver lives in `cmd/version.go` (Operation 1), so it is reachable from `cmd_test`; the file MUST live under `tests/cmd/` alongside the rest of the project's external-test suite — NOT alongside the source under `cmd/openspdd/`.
+3. **Responsibility**: lock in each branch of `ResolveVersion`'s priority chain so the `go install` fix cannot silently regress.
+4. **Test cases** (named to read as executable specifications of intent):
+   - `TestResolveVersion_LdflagSetWins`: with `injected = "v1.2.3"` and a stub seam returning a *different* version (`"v9.9.9"`), assert `cmd.ResolveVersion("v1.2.3") == "v1.2.3"`. Locks in the rule that the goreleaser ldflag takes precedence over build info.
+   - `TestResolveVersion_FallsBackToBuildInfo_WhenInjectedIsDev`: with `injected = "dev"` and a stub returning `&debug.BuildInfo{Main: debug.Module{Version: "v0.4.12"}}, true`, assert `cmd.ResolveVersion("dev") == "v0.4.12"`. The `go install` happy path.
+   - `TestResolveVersion_FallsBackToBuildInfo_WhenInjectedIsEmpty`: same as above but `injected = ""` — verifies that an empty `injected` is treated identically to `"dev"` for fallback purposes.
+   - `TestResolveVersion_BuildInfoDevelTreatedAsMissing`: with `injected = "dev"` and a stub returning `&debug.BuildInfo{Main: debug.Module{Version: "(devel)"}}, true`, assert `cmd.ResolveVersion("dev") == "dev"`. Locks in the rule that Go's `(devel)` placeholder is treated as "no version".
+   - `TestResolveVersion_BuildInfoEmptyVersionTreatedAsMissing`: with `injected = "dev"` and a stub returning `&debug.BuildInfo{Main: debug.Module{Version: ""}}, true`, assert `cmd.ResolveVersion("dev") == "dev"`.
+   - `TestResolveVersion_BuildInfoUnavailable`: with `injected = "dev"` and a stub returning `(nil, false)`, assert `cmd.ResolveVersion("dev") == "dev"`. Verifies graceful fallback when `runtime/debug.ReadBuildInfo` itself reports failure.
+5. **Test seam usage**:
+   - Each test obtains a restore closure via `restore := cmd.SetReadBuildInfoForTest(func() (*debug.BuildInfo, bool) { ... })` and registers `t.Cleanup(restore)` immediately after the swap. This mirrors the exported-test-helper pattern already in `cmd/root.go` (`cmd.RootCommand()`, used by `tests/cmd/version_test.go`), with the seam-swap mediated by `SetReadBuildInfoForTest` because the test package is external (`cmd_test`) and cannot touch the unexported `readBuildInfo` variable directly.
+   - Where useful, sub-tests via `t.Run(name, func(t *testing.T) { ... })` group related cases.
+6. **Illustrative skeleton** (the actual implementation is produced by `/spdd-generate`):
+
+   ```go
+   package cmd_test
+
+   import (
+       "runtime/debug"
+       "testing"
+
+       "github.com/gszhangwei/open-spdd/cmd"
+   )
+
+   func TestResolveVersion_LdflagSetWins(t *testing.T) {
+       restore := cmd.SetReadBuildInfoForTest(func() (*debug.BuildInfo, bool) {
+           return &debug.BuildInfo{Main: debug.Module{Version: "v9.9.9"}}, true
+       })
+       t.Cleanup(restore)
+
+       if got, want := cmd.ResolveVersion("v1.2.3"), "v1.2.3"; got != want {
+           t.Fatalf("ResolveVersion(%q) = %q, want %q (ldflag must win over build info)", "v1.2.3", got, want)
+       }
+   }
+   ```
+
+7. **Constraints**:
+   - Tests MUST NOT invoke the real `debug.ReadBuildInfo()`; all branches are exercised through the stub installed via `cmd.SetReadBuildInfoForTest`.
+   - The test file's `package` declaration MUST be exactly `cmd_test` (matching the rest of `tests/cmd/`).
+   - Tests MUST NOT attempt to reach the unexported `readBuildInfo` variable; doing so is impossible from `cmd_test` and is also the documented contract.
+   - Tests MUST run in well under 100ms total — no I/O, no subprocess, no filesystem access.
+   - Tests MUST NOT depend on host OS or Go toolchain version; the stub fully controls the build-info input.
+   - Tests MUST register the restore closure in `t.Cleanup` immediately after the seam swap so it runs on every exit path, including failure.
+
 ## Norms
 
 1. **Cobra subcommand layout**:
@@ -564,10 +680,12 @@ UninstallExecutor --> UninstallPlan : executes
    - File removal uses `os.Remove`; directory removal is not used in this feature (no recursive deletes).
 
 7. **Testing**:
-   - Tests live in `tests/<package>/<file>_test.go` (external `_test` package), matching the existing convention demonstrated by `tests/cmd/root_test.go`.
-   - Pure functions (`classifyByPath`, `buildPlan`, `Describe`) are table-driven.
-   - Behavior with side effects (`uninstallExecutor.Execute`) is tested with stub injections at function-variable seams (`execCommand`) and a stub `UIRenderer`.
-   - Tests MUST NOT call `brew`, `go install`, or other external binaries.
+   - All unit tests live in `tests/<package>/<file>_test.go` (external `_test` package), matching the existing convention demonstrated by `tests/cmd/root_test.go` and `tests/cmd/version_test.go`. This applies uniformly to the new `tests/cmd/uninstall_test.go`, `tests/cmd/uninstall_executor_test.go`, and `tests/cmd/version_resolve_test.go`.
+   - Code that tests need to exercise MUST live in an importable package (e.g., `cmd`), NOT in `package main`. `cmd/openspdd/main.go` therefore retains only the `version` build-time variable and the two-line wiring call; the resolver, seam, and test helper all live in `cmd/version.go` so that external test code under `tests/cmd/` can reach them.
+   - Pure functions (`classifyByPath`, `buildPlan`, `Describe`, `cmd.ResolveVersion`) are table-driven where useful.
+   - Behavior with side effects (`uninstallExecutor.Execute`) is tested with stub injections at function-variable seams (`execCommand`, `readBuildInfo`) and a stub `UIRenderer`. External test code MUST swap unexported seams via exported test helpers (e.g., `cmd.SetReadBuildInfoForTest`) rather than touching unexported state.
+   - Function-variable seams MUST always be restored via `t.Cleanup` (or via the restore closure returned by the swap helper) so test ordering and parallelism remain safe.
+   - Tests MUST NOT call `brew`, `go install`, `runtime/debug.ReadBuildInfo` directly, or other external binaries / runtime introspection — every such surface goes through a seam.
 
 8. **Dependencies**:
    - No new third-party dependencies. All required functionality is in the standard library plus already-imported `cobra` / `huh`.
@@ -579,13 +697,18 @@ UninstallExecutor --> UninstallPlan : executes
    - No "what" comments narrating obvious code; all comments explain "why".
 
 10. **Build-time injection**:
-    - The `version` variable lives in `package main` to match the existing goreleaser ldflag (`-X main.version=...`). Any future move into the `cmd` package MUST be paired with a `.goreleaser.yaml` change in the same commit.
+    - The `version` variable lives in `package main` (`cmd/openspdd/main.go`) to match the existing goreleaser ldflag (`-X main.version=...`). Any future move into the `cmd` package MUST be paired with a `.goreleaser.yaml` change in the same commit.
+    - The version resolver (`cmd.ResolveVersion`) and its `runtime/debug.ReadBuildInfo` seam live in the `cmd` package (`cmd/version.go`), separate from the `version` variable. This separation is required so the resolver can be exercised by external tests under `tests/cmd/`; the goreleaser ldflag still binds correctly because the variable it references stays in `package main`.
 
 ## Safeguards
 
 1. **Functional Constraints**:
-   - `openspdd -v` MUST exit 0 and print exactly `openspdd <version>\n` to stdout, where `<version>` is the build-injected version or `dev` for unbuilt sources.
+   - `openspdd -v` MUST exit 0 and print exactly `openspdd <version>\n` to stdout, where `<version>` is resolved by the following priority chain (first match wins):
+     1. The goreleaser-injected ldflag value, if non-empty and not the literal `"dev"` (release builds installed via Homebrew or downloaded GitHub release tarballs).
+     2. `runtime/debug.BuildInfo`'s `Main.Version`, if non-empty and not the placeholder `"(devel)"` (binaries built by `go install module@vX.Y.Z`, including `@latest` and `@main` pseudo-versions).
+     3. The literal `"dev"` (local `go run` / `go build` from source).
    - `openspdd --version` MUST behave identically to `openspdd -v`.
+   - For users who installed via `go install github.com/gszhangwei/open-spdd/cmd/openspdd@vX.Y.Z`, `openspdd -v` MUST print the actual installed module version, NOT the literal `"dev"`. This closes the version-resolution gap that exists with goreleaser-only injection.
    - `openspdd uninstall --dry-run` MUST exit 0 without modifying any file or running any subprocess.
    - `openspdd uninstall` (interactive) MUST require explicit user confirmation before any destructive action.
    - `openspdd uninstall --yes` MUST skip the confirmation prompt but still print the plan before acting.
@@ -616,13 +739,18 @@ UninstallExecutor --> UninstallPlan : executes
 6. **Exception Handling Constraints**:
    - Errors surfaced to the user MUST include the underlying cause (wrapped via `%w` or string-concatenated when wrapping is unhelpful).
    - Exit codes MUST be: 0 for success or dry-run; 1 for any execution failure or unknown install method.
-   - The CLI MUST NOT panic for any expected failure mode (missing `brew`, missing marker, unknown method, Windows self-delete refusal). All such cases produce a graceful error or warning.
+   - The CLI MUST NOT panic for any expected failure mode (missing `brew`, missing marker, unknown method, Windows self-delete refusal, unavailable build info). All such cases produce a graceful error or warning.
+   - `runtime/debug.ReadBuildInfo` returning `(nil, false)` is an EXPECTED runtime condition (e.g., binaries built with extreme link-time stripping), and MUST NOT cause panic, error propagation, or non-zero exit. The resolver MUST silently fall through to the next priority tier.
    - Subprocess stdout/stderr MUST be forwarded to the user's terminal so that `brew`'s native diagnostics remain visible.
 
 7. **Technical Constraints**:
-   - No new third-party Go dependencies. `go.mod` and `go.sum` MUST NOT change.
+   - No new third-party Go dependencies. `go.mod` and `go.sum` MUST NOT change. The added `runtime/debug` import is part of the Go standard library and does not affect the module graph.
    - The `version` package-level variable in `cmd/openspdd/main.go` MUST be named exactly `version` — `.goreleaser.yaml` references `main.version` literally.
    - The default value of `version` MUST be a non-empty string.
+   - The `readBuildInfo` package-level seam in `cmd/version.go` MUST be unexported and MUST NOT be reassigned by production code. It exists exclusively as a substitution point for unit tests in Operation 14, swapped via the exported `cmd.SetReadBuildInfoForTest` helper. Direct reassignment, or use of the helper outside test code, constitutes a code-review-blocking violation.
+   - The `ResolveVersion` function MUST be exported (uppercase initial) and live in the `cmd` package. Export is required because `cmd/openspdd/main.go` (`package main`) is its only production caller and external test code under `tests/cmd/` (`package cmd_test`) is its only test caller — both reach it from outside the `cmd` package.
+   - The `cmd.SetReadBuildInfoForTest` helper MUST be exported and document in its Go doc comment that it is intended exclusively for tests.
+   - `cmd/openspdd/main.go` MUST NOT import `runtime/debug`; the build-info dependency lives entirely inside `cmd/version.go`.
    - Cross-platform behavior MUST be exercised by tests via the parameterized `buildPlanForOS` helper rather than skipped via `runtime.GOOS` checks alone.
 
 8. **Data Constraints**:
@@ -631,7 +759,7 @@ UninstallExecutor --> UninstallPlan : executes
    - Plan steps are immutable once constructed; the executor MUST NOT mutate the plan it receives.
 
 9. **API Constraints**:
-   - The `cmd.SetVersion(string)` exported function is the only public surface added to the `cmd` package for version handling. No additional setters or getters.
-   - The `cmd.RootCommand()` helper added for test export MUST NOT be used by non-test code in this repo.
+   - The `cmd` package exposes exactly four new exported identifiers as part of this feature: `SetVersion(string)`, `RootCommand() *cobra.Command`, `ResolveVersion(string) string`, and `SetReadBuildInfoForTest(func() (*debug.BuildInfo, bool)) func()`. No additional setters, getters, or globals.
+   - `cmd.RootCommand()` and `cmd.SetReadBuildInfoForTest()` are test-export helpers; they MUST NOT be invoked by non-test code in this repo.
    - The `uninstall` subcommand MUST take no positional arguments; passing args MUST produce Cobra's default unknown-args error.
    - Long help text for the `uninstall` command MUST explicitly state the in-scope and out-of-scope items so users are not surprised.
