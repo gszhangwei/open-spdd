@@ -1,4 +1,4 @@
-module open-spdd
+module github.com/gszhangwei/open-spdd
 
 go 1.23
 

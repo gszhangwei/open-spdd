@@ -1,6 +1,6 @@
 package main
 
-import "open-spdd/cmd"
+import "github.com/gszhangwei/open-spdd/cmd"
 
 func main() {
 	cmd.Execute()

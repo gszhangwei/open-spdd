@@ -6,9 +6,9 @@ import (
 
 	"github.com/spf13/cobra"
 
-	"open-spdd/internal/detector"
-	"open-spdd/internal/templates"
-	"open-spdd/internal/ui"
+	"github.com/gszhangwei/open-spdd/internal/detector"
+	"github.com/gszhangwei/open-spdd/internal/templates"
+	"github.com/gszhangwei/open-spdd/internal/ui"
 )
 
 var (

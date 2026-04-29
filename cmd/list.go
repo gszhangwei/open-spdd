@@ -5,7 +5,7 @@ import (
 
 	"github.com/spf13/cobra"
 
-	"open-spdd/internal/templates"
+	"github.com/gszhangwei/open-spdd/internal/templates"
 )
 
 var (

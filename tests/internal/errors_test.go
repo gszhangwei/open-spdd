@@ -4,7 +4,7 @@ import (
 	"errors"
 	"testing"
 
-	"open-spdd/internal"
+	"github.com/gszhangwei/open-spdd/internal"
 )
 
 func TestErrToolNotDetected(t *testing.T) {

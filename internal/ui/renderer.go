@@ -6,7 +6,7 @@ import (
 
 	"github.com/charmbracelet/huh"
 
-	"open-spdd/internal/templates"
+	"github.com/gszhangwei/open-spdd/internal/templates"
 )
 
 // UIRenderer defines the interface for terminal output rendering.

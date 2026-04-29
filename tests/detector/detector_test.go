@@ -5,7 +5,7 @@ import (
 	"path/filepath"
 	"testing"
 
-	"open-spdd/internal/detector"
+	"github.com/gszhangwei/open-spdd/internal/detector"
 )
 
 func TestNewDefaultDetector(t *testing.T) {

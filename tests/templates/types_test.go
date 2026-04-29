@@ -3,7 +3,7 @@ package templates_test
 import (
 	"testing"
 
-	"open-spdd/internal/templates"
+	"github.com/gszhangwei/open-spdd/internal/templates"
 )
 
 func TestParseFrontmatter_ValidFrontmatter(t *testing.T) {

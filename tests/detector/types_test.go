@@ -3,7 +3,7 @@ package detector_test
 import (
 	"testing"
 
-	"open-spdd/internal/detector"
+	"github.com/gszhangwei/open-spdd/internal/detector"
 )
 
 func TestAIToolType_String(t *testing.T) {

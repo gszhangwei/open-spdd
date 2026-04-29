@@ -7,7 +7,7 @@ import (
 	"github.com/charmbracelet/huh"
 	"github.com/spf13/cobra"
 
-	"open-spdd/internal/detector"
+	"github.com/gszhangwei/open-spdd/internal/detector"
 )
 
 var initCmd = &cobra.Command{

@@ -8,8 +8,8 @@ import (
 	"sort"
 	"strings"
 
-	"open-spdd/internal"
-	"open-spdd/internal/detector"
+	"github.com/gszhangwei/open-spdd/internal"
+	"github.com/gszhangwei/open-spdd/internal/detector"
 )
 
 // TemplateManager defines the interface for template operations.

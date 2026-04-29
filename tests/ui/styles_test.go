@@ -3,7 +3,7 @@ package ui_test
 import (
 	"testing"
 
-	"open-spdd/internal/ui"
+	"github.com/gszhangwei/open-spdd/internal/ui"
 )
 
 func TestStylesAreDefined(t *testing.T) {

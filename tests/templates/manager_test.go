@@ -6,9 +6,9 @@ import (
 	"strings"
 	"testing"
 
-	"open-spdd/internal"
-	"open-spdd/internal/detector"
-	"open-spdd/internal/templates"
+	"github.com/gszhangwei/open-spdd/internal"
+	"github.com/gszhangwei/open-spdd/internal/detector"
+	"github.com/gszhangwei/open-spdd/internal/templates"
 )
 
 func TestNewEmbeddedTemplateManager(t *testing.T) {

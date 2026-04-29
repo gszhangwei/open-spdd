@@ -3,8 +3,8 @@ package cmd_test
 import (
 	"testing"
 
-	"open-spdd/cmd"
-	"open-spdd/internal/detector"
+	"github.com/gszhangwei/open-spdd/cmd"
+	"github.com/gszhangwei/open-spdd/internal/detector"
 )
 
 func TestParseToolFlag_Cursor(t *testing.T) {

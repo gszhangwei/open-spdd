@@ -3,8 +3,8 @@ package ui_test
 import (
 	"testing"
 
-	"open-spdd/internal/templates"
-	"open-spdd/internal/ui"
+	"github.com/gszhangwei/open-spdd/internal/templates"
+	"github.com/gszhangwei/open-spdd/internal/ui"
 )
 
 func TestNewCharmUIRenderer(t *testing.T) {
