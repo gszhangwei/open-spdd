@@ -54,6 +54,7 @@ func init() {
 
 // Execute runs the root command.
 func Execute() {
+	maybePrintPathHint()
 	if err := rootCmd.Execute(); err != nil {
 		os.Exit(1)
 	}

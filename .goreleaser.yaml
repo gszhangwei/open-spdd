@@ -7,7 +7,9 @@ before:
     - go mod tidy
 
 builds:
-  - env:
+  - main: ./cmd/openspdd
+    binary: openspdd
+    env:
       - CGO_ENABLED=0
     goos:
       - linux

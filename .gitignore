@@ -3,16 +3,16 @@
 *.iml
 .vscode/
 
-# Go binaries
+# Go binaries (anchored to repo root so cmd/openspdd/ dir is NOT ignored)
 *.exe
 *.exe~
 *.dll
 *.so
 *.dylib
-open-spdd
-openspdd
-spdd-cli
-spdd/open-spdd
+/open-spdd
+/openspdd
+/spdd-cli
+/spdd/open-spdd
 
 # GoReleaser
 dist/

@@ -115,7 +115,28 @@ brew upgrade openspdd
 ### Go Install
 
 ```bash
-go install github.com/gszhangwei/open-spdd@latest
+go install github.com/gszhangwei/open-spdd/cmd/openspdd@latest
+```
+
+二进制安装到 `$(go env GOPATH)/bin/openspdd`（通常是 `~/go/bin/openspdd`）。请确保该目录已加入 `$PATH`：
+
+```bash
+# zsh
+echo 'export PATH="$(go env GOPATH)/bin:$PATH"' >> ~/.zshrc && source ~/.zshrc
+
+# bash
+echo 'export PATH="$(go env GOPATH)/bin:$PATH"' >> ~/.bashrc && source ~/.bashrc
+```
+
+第一次运行 `openspdd` 时，如果检测到所在目录不在 `$PATH` 中，会打印一次性的提示，告诉你针对当前 shell 应该执行的命令。
+
+### 一键安装脚本
+
+如果你 clone 了仓库，可以使用 `scripts/install.sh`，它会调用 `go install` 并自动打印 PATH 配置指引：
+
+```bash
+./scripts/install.sh           # 安装 @latest
+./scripts/install.sh v1.2.3    # 安装指定 tag
 ```
 
 ### 下载二进制
@@ -327,8 +348,8 @@ openspdd generate spdd-api-test
 ```bash
 git clone https://github.com/gszhangwei/open-spdd.git
 cd open-spdd
-go build -o openspdd .
-go install .
+go build -o openspdd ./cmd/openspdd
+go install ./cmd/openspdd
 ```
 
 ## 测试

@@ -107,7 +107,28 @@ brew install openspdd
 ### Go Install
 
 ```bash
-go install github.com/gszhangwei/open-spdd@latest
+go install github.com/gszhangwei/open-spdd/cmd/openspdd@latest
+```
+
+The binary is installed to `$(go env GOPATH)/bin/openspdd` (typically `~/go/bin/openspdd`). Make sure that directory is on your `$PATH`:
+
+```bash
+# zsh
+echo 'export PATH="$(go env GOPATH)/bin:$PATH"' >> ~/.zshrc && source ~/.zshrc
+
+# bash
+echo 'export PATH="$(go env GOPATH)/bin:$PATH"' >> ~/.bashrc && source ~/.bashrc
+```
+
+The first time `openspdd` runs, it will also detect this and print a one-time hint with the exact command for your shell.
+
+### One-shot installer script
+
+If you cloned the repo, the script `scripts/install.sh` runs `go install` and prints PATH instructions automatically:
+
+```bash
+./scripts/install.sh           # installs @latest
+./scripts/install.sh v1.2.3    # installs a specific tag
 ```
 
 ### Download Binary
@@ -319,8 +340,8 @@ openspdd generate spdd-api-test
 ```bash
 git clone https://github.com/gszhangwei/open-spdd.git
 cd open-spdd
-go build -o openspdd .
-go install .
+go build -o openspdd ./cmd/openspdd
+go install ./cmd/openspdd
 ```
 
 ## Testing
