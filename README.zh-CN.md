@@ -143,9 +143,31 @@ echo 'export PATH="$(go env GOPATH)/bin:$PATH"' >> ~/.bashrc && source ~/.bashrc
 
 从 [GitHub Releases](https://github.com/gszhangwei/open-spdd/releases) 下载。
 
+### 卸载
+
+`openspdd uninstall` 会自动检测当前二进制是通过哪种方式安装的（Homebrew 或 `go install`），然后执行对应的清理操作。命令在执行前会先打印计划，默认需要交互式确认。
+
+```bash
+# 仅预览，不做任何改动
+openspdd uninstall --dry-run
+
+# 交互式（默认）：打印计划并询问确认
+openspdd uninstall
+
+# 非交互式（例如脚本中使用）：跳过确认提示
+openspdd uninstall --yes
+```
+
+对于 Homebrew 安装，等价于执行 `brew uninstall gszhangwei/tools/openspdd` 并清理首次运行的提示标记文件。对于 `go install` 安装，会直接删除已解析路径下的二进制文件。如果无法判断安装方式（例如手动拷贝的二进制），`uninstall` 会拒绝执行并打印解析后的路径，由用户自行删除。
+
+> **范围**：只会删除 openspdd 本身的二进制和 openspdd 自己的首次运行标记文件。各个用户项目中已生成的 SPDD 命令模板（如 `.cursor/commands/spdd-*.md`、`.claude/commands/spdd-*.md` 等）属于用户文件，不会被删除。Homebrew tap `gszhangwei/tools` 也会保留（其中可能还有别的工具）。
+
 ## 快速开始
 
 ```bash
+# 打印已安装版本
+openspdd -v
+
 # 进入项目目录
 cd your-project
 

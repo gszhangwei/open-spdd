@@ -55,14 +55,23 @@ func maybePrintPathHint() {
 // guessInstallDir returns the directory we believe the running binary lives in.
 // It is best-effort and used only for display purposes in the PATH hint.
 func guessInstallDir() string {
-	exePath, err := os.Executable()
+	_, resolved, err := resolveExecutablePath()
 	if err != nil {
 		return "<your Go bin directory>"
 	}
-	if resolved, err := filepath.EvalSymlinks(exePath); err == nil {
-		exePath = resolved
+	return filepath.Dir(resolved)
+}
+
+func resolveExecutablePath() (raw, resolved string, err error) {
+	raw, err = os.Executable()
+	if err != nil {
+		return "", "", err
 	}
-	return filepath.Dir(exePath)
+	resolved = raw
+	if r, evalErr := filepath.EvalSymlinks(raw); evalErr == nil {
+		resolved = r
+	}
+	return raw, resolved, nil
 }
 
 // pathHintMarkerPath returns the file path used to remember that we already

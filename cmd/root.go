@@ -52,6 +52,32 @@ func init() {
 	rootCmd.PersistentFlags().StringVarP(&toolFlag, "tool", "t", "", "Manually specify tool type (cursor, claude-code, antigravity, github-copilot)")
 }
 
+func SetVersion(v string) {
+	v = strings.TrimSpace(v)
+	if v == "" {
+		v = "dev"
+	}
+	rootCmd.Version = v
+	rootCmd.SetVersionTemplate("openspdd {{.Version}}\n")
+
+	// Cobra registers the `--version` flag lazily when Version is non-empty
+	// and the command is executed. To bind a `-v` shorthand we touch the
+	// flag explicitly: declare it ourselves if absent, otherwise patch the
+	// existing definition.
+	if f := rootCmd.Flags().Lookup("version"); f != nil {
+		f.Shorthand = "v"
+		f.Usage = "Print openspdd version and exit"
+	} else {
+		rootCmd.Flags().BoolP("version", "v", false, "Print openspdd version and exit")
+	}
+}
+
+// RootCommand exposes the root *cobra.Command for testing. Production code
+// should use Execute() instead.
+func RootCommand() *cobra.Command {
+	return rootCmd
+}
+
 // Execute runs the root command.
 func Execute() {
 	maybePrintPathHint()

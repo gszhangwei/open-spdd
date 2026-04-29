@@ -135,9 +135,31 @@ If you cloned the repo, the script `scripts/install.sh` runs `go install` and pr
 
 Download from [GitHub Releases](https://github.com/gszhangwei/open-spdd/releases).
 
+### Uninstall
+
+`openspdd uninstall` detects how the binary was installed (Homebrew or `go install`) and runs the matching cleanup. The plan is printed before any change, and confirmation is required by default.
+
+```bash
+# Preview without changing anything
+openspdd uninstall --dry-run
+
+# Interactive (default): prints the plan, asks for confirmation
+openspdd uninstall
+
+# Non-interactive (e.g., for scripts): skip the confirmation prompt
+openspdd uninstall --yes
+```
+
+For a Homebrew install, this is equivalent to running `brew uninstall gszhangwei/tools/openspdd` plus a small first-run-marker cleanup. For a `go install` install, it removes the binary at the resolved path. If the install method cannot be classified (e.g., a manually-copied binary), `uninstall` refuses to act and prints the resolved path so you can remove it manually.
+
+> **Scope**: Only the openspdd binary and openspdd's own first-run marker are removed. Generated SPDD command templates inside your projects (`.cursor/commands/spdd-*.md`, `.claude/commands/spdd-*.md`, etc.) are user files and are left untouched. The Homebrew tap `gszhangwei/tools` is also left in place.
+
 ## Quick Start
 
 ```bash
+# Print the installed version
+openspdd -v
+
 # Navigate to your project
 cd your-project
 
