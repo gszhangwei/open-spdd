@@ -13,15 +13,15 @@ Update an existing SPDD (Structured Prompt-Driven Development) prompt file with 
 
 ```
 # Update with architectural principles
-/spdd-prompt-update @spdd/prompt/GGQPA-XXX-202603131758-[Feat]-api-token-usage-billing.md
+/spdd-prompt-update @spdd/prompt/SPDD-XXX-202603131758-[Feat]-api-token-usage-billing.md
 Add three-layer architecture with dependency inversion principle
 
 # Update with new requirements
-/spdd-prompt-update @spdd/prompt/GGQPA-XXX-202603131758-[Feat]-api-token-usage-billing.md
+/spdd-prompt-update @spdd/prompt/SPDD-XXX-202603131758-[Feat]-api-token-usage-billing.md
 Add support for batch usage submission
 
 # Update specific section
-/spdd-prompt-update @spdd/prompt/GGQPA-XXX-202603131758-[Feat]-api-token-usage-billing.md
+/spdd-prompt-update @spdd/prompt/SPDD-XXX-202603131758-[Feat]-api-token-usage-billing.md
 Update Safeguards section to add rate limiting constraints
 ```
 
@@ -105,22 +105,34 @@ Update Safeguards section to add rate limiting constraints
 8. **Show update summary**
 
    ```
-   ✅ SPDD prompt updated: `spdd/prompt/<file-name>.md`
+   SPDD prompt updated: `spdd/prompt/<file-name>.md`
 
-   📋 Changes made:
+   Changes made:
    - [Section]: [Summary of changes]
    - [Section]: [Summary of changes]
 
-   🔍 Sections unchanged:
+   Sections unchanged:
    - [List of sections that were not modified]
 
-   ⚠️ Review recommendations:
+   Review recommendations:
    - [Any areas that may need manual review]
    ```
 
-9. **Ask for confirmation**
+9. **Update the source story's YAML frontmatter** (Docs-as-Code automation)
 
-   > "The SPDD prompt has been updated. Would you like me to regenerate the affected code using `/spdd-generate`?"
+   A prompt update is, by definition, a refine-loop iteration — even if no code is regenerated yet. Increment the counter so dashboards reflect reality.
+
+   a. **Locate the source story file** by tracing the prompt's JIRA / story id back to a file under `requirements/` (same algorithm as Step 8 of `/spdd-generate`). Skip steps 9b–9c with a warning if no story can be matched.
+
+   b. **Mutate the frontmatter** in-place (Read → StrReplace, never reorder keys):
+    - `quality_metrics.ai_refine_loops`: read the current integer and write back `current + 1` (treat `null`/missing as `0`).
+    - Do NOT touch any other field — assignees, status, and timestamps are owned by other commands / hooks.
+
+   c. **Surface the mutation** in the post-update message, e.g. `quality_metrics.ai_refine_loops: 4 → 5`.
+
+10. **Ask for confirmation**
+
+    > "The SPDD prompt has been updated. Would you like me to regenerate the affected code using `/spdd-generate`?"
 
 **Output**
 
@@ -136,6 +148,7 @@ The updated SPDD prompt file with changes integrated while preserving the REASON
 - Do NOT rename the file - preserve the original filename
 - Preserve the REASONS Canvas structure (all 7 sections must remain)
 - Validate that updates don't contradict existing unchanged content
+- Always increment the source story's `quality_metrics.ai_refine_loops` counter per Step 9; never mutate other frontmatter fields from this command
 
 **No Code Block Rules** (CRITICAL):
 

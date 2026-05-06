@@ -66,6 +66,28 @@ Input can be provided in two ways:
     - Extract the highest `[User-story-N]` number from existing filenames
     - New stories start from `N+1`
 
+2a. **Capture machine-derivable metadata for YAML frontmatter** (Docs-as-Code automation)
+
+   These values are used in Step 8 to inject the canonical YAML frontmatter on every generated story file. Do NOT prompt the user for any of them — they MUST be derived automatically.
+
+   a. **Capture BA identity** by running:
+   ```
+   git config user.name
+   git config user.email
+   ```
+   - If `user.name` is empty, fall back to the value of `$USER` / `$USERNAME` from the environment.
+   - If both are empty, set `assignees.ba` to `"unknown"` and emit a warning in the final summary instructing the user to run `git config --global user.name "Your Name"`.
+
+   b. **Capture creation timestamp** in `YYYY-MM-DD HH:MM` form using the local system clock (`date +"%Y-%m-%d %H:%M"`). Use this single timestamp consistently across all stories generated in this run so they share a creation moment.
+
+   c. **AI-derive `title`** from the consolidated business input collected in Step 1. The title MUST be:
+    - A single line, ≤ 80 characters.
+    - In the same natural language as the user input.
+    - Free of trailing punctuation and Markdown.
+   The user will see and may correct this in the final summary.
+
+   **IMPORTANT**: All values captured here are inputs to Step 8's frontmatter injection — do NOT discuss them with the user mid-flow.
+
 3. **Abstract task analysis and INVEST evaluation**
 
    Before creating any stories, analyze the feature at an abstract level.
@@ -254,9 +276,43 @@ Input can be provided in two ways:
     - Do NOT break business logic completeness
     - Do NOT create complex inter-story dependencies
 
-8. **Assemble and save the story document**
+8. **Assemble and save the story document(s) with YAML frontmatter**
 
-   a. **Construct the complete document**:
+   a. **Inject canonical YAML frontmatter** at the very top of every generated story file. This is the **single source of truth** for downstream automation (`/spdd-analysis`, `/spdd-generate`, `/spdd-prompt-update`, `/spdd-block`, CI hooks). The schema is fixed — do NOT add, rename, reorder, or omit fields. Use `null` for unknown values; do NOT use empty strings unless the schema explicitly says so.
+
+   ```yaml
+   ---
+   id: STORY-{MODULE}-{SEQ}              # from Step 4 — primary key for downstream tools
+   title: "{ai-derived title from Step 2a.c}"
+   status: BACKLOG                        # one of BACKLOG | IN_PROGRESS | IN_TEST | BLOCKED | DONE
+   iteration: null                        # filled in by humans during sprint planning
+   tags: []                               # may be left empty; humans curate later
+   assignees:
+     ba: "{git user.name from Step 2a.a}"
+     qa: null                             # populated by /spdd-analysis on first run
+     dev: null                            # populated by /spdd-generate on first run
+   timestamps:
+     created_at: "{YYYY-MM-DD HH:MM from Step 2a.b}"
+     analyzed_at: null                    # populated by /spdd-analysis
+     developed_at: null                   # populated by Git pre-push / PR open hook
+     tested_at: null                      # populated by CI on QA approval
+     delivered_at: null                   # populated by CI on merge to main
+   quality_metrics:
+     ai_refine_loops: 0                   # incremented by /spdd-generate and /spdd-prompt-update
+     qa_rejections: 0                     # incremented by CI on PR "changes requested"
+     test_coverage: null                  # written by CI after unit tests
+   block_records: []                      # appended/closed by /spdd-block & /spdd-unblock
+   inline_defects: []                     # human-edited (use IDE snippet)
+   related_bugs: []                       # human-edited (use IDE snippet)
+   ---
+   ```
+
+   **Per-file rules**:
+    - When the run produces multiple story files, each file gets its own frontmatter with its own `id`. The `created_at` is shared (same run).
+    - Preserve key order exactly as shown above so diffs stay readable across automation passes.
+    - YAML strings containing `:`, `#`, or leading `-` MUST be double-quoted.
+
+   b. **Construct the complete document body** (placed immediately after the closing `---` of the frontmatter):
 
    ```markdown
    # Story Decomposition: [Feature Name]
@@ -277,7 +333,7 @@ Input can be provided in two ways:
    [All generated stories in sequence]
    ```
 
-   b. **Derive file name**: `[User-story-{N}]{kebab-case-title}.md`
+   c. **Derive file name**: `[User-story-{N}]{kebab-case-title}.md`
     - **N**: Next available story number based on existing files in `requirements/`
     - **title**: Descriptive kebab-case title derived from the feature
 
@@ -286,13 +342,13 @@ Input can be provided in two ways:
     - `[User-story-{N+1}]{story-2-title}.md`
     - etc.
 
-   Alternatively, if the stories are closely related and part of a single feature decomposition, generate a single consolidated file.
+   Alternatively, if the stories are closely related and part of a single feature decomposition, generate a single consolidated file. In that case the consolidated file still carries a single frontmatter block with a single `id` representing the umbrella story; per-section IDs live inside the body as `## [STORY-…]` headers.
 
-   c. **Create directory and write file(s)**:
+   d. **Create directory and write file(s)**:
     - Ensure directory `requirements/` exists under the project root (create if not)
-    - Write the complete story document(s) to `requirements/<file-name>.md`
+    - Write the complete story document(s) (frontmatter + body) to `requirements/<file-name>.md`
 
-   d. **Show summary to user**:
+   e. **Show summary to user** (and surface any metadata fallbacks from Step 2a):
 
    ```
    ✅ Story generation complete. Stories saved to `requirements/`
@@ -302,6 +358,9 @@ Input can be provided in two ways:
    - Stories generated: [count]
    - Total ACs: [count]
    - Estimated total effort: [X-Y days]
+   - BA assignee (auto from git): [git user.name OR ⚠️ unknown — run `git config --global user.name "Your Name"`]
+   - Created at: [YYYY-MM-DD HH:MM]
+   - Status: BACKLOG (use /spdd-analysis to advance)
 
    📝 Stories:
    1. [STORY-XXX-001] [title] — [estimated effort]
@@ -347,6 +406,11 @@ Structured, INVEST-compliant story document(s) saved to `requirements/`, contain
 - Always read ALL `@` referenced files completely
 - Always create `requirements/` directory if it does not exist
 - File name MUST follow the naming convention: `[User-story-{N}]{kebab-case-title}.md`
+- Every generated story file MUST start with the canonical YAML frontmatter defined in Step 8a — no field may be added, renamed, reordered, or omitted
+- `assignees.ba` MUST come from `git config user.name`; do NOT prompt the user for it
+- `created_at` MUST come from the local system clock at run time; do NOT make it up
+- `status` MUST be initialized to `BACKLOG`; never set a later status from this command
+- All counters in `quality_metrics` MUST be initialized to `0` (or `null` for `test_coverage`); do NOT pre-populate
 
 **Context Integrity Guardrails**:
 
@@ -385,7 +449,7 @@ This command is the **story decomposition phase** of the SPDD workflow, transfor
 │  ┌────────────────────────────────────────────────────────────────┐    │
 │  │ Story → Enriched Context (domain concepts + strategy + risks)  │    │
 │  │                                                                 │    │
-│  │ Output: spdd/analysis/GGQPA-XXX-*-[Analysis]-*.md              │    │
+│  │ Output: spdd/analysis/SPDD-XXX-*-[Analysis]-*.md              │    │
 │  └────────────────────────────────────────────────────────────────┘    │
 │                              │                                          │
 │                              ▼                                          │
@@ -393,7 +457,7 @@ This command is the **story decomposition phase** of the SPDD workflow, transfor
 │  ┌────────────────────────────────────────────────────────────────┐    │
 │  │ Enriched Context → REASONS Canvas Structured Prompt             │    │
 │  │                                                                 │    │
-│  │ Output: spdd/prompt/GGQPA-XXX-*.md (REASONS Canvas)           │    │
+│  │ Output: spdd/prompt/SPDD-XXX-*.md (REASONS Canvas)           │    │
 │  └────────────────────────────────────────────────────────────────┘    │
 │                              │                                          │
 │                              ▼                                          │

@@ -230,13 +230,13 @@ Input can be provided in two ways:
 7. **Save the enriched context document**
 
    a. **Derive file name**: `{JIRA}-{TIMESTAMP}-[Analysis]-{description}.md`
-    - **JIRA**: Extract from business context if mentioned, otherwise use `GGQPA-XXX`
+    - **JIRA**: Extract from business context if mentioned, otherwise use `SPDD-XXX`
     - **TIMESTAMP**: `YYYYMMDDHHmm` (current time)
     - **description**: Derive from business context — kebab-case, < 10 words
 
    Examples:
-    - `GGQPA-XXX-202603131530-[Analysis]-token-usage-billing.md`
-    - `GGQPA-169-202603131530-[Analysis]-monthly-report-export.md`
+    - `SPDD-XXX-202603131530-[Analysis]-token-usage-billing.md`
+    - `SPDD-169-202603131530-[Analysis]-monthly-report-export.md`
 
    b. **Create directory and write file**:
     - Ensure directory `spdd/analysis/` exists under the project root (create if not)
@@ -245,9 +245,9 @@ Input can be provided in two ways:
    c. **Show summary to user**:
 
    ```
-   ✅ Analysis complete. Enriched context saved to `spdd/analysis/<file-name>.md`
+   Analysis complete. Enriched context saved to `spdd/analysis/<file-name>.md`
 
-   📋 Analysis summary:
+   Analysis summary:
    - Project type: [backend/frontend/fullstack]
    - Existing concepts identified: [count]
    - New concepts required: [count]
@@ -255,11 +255,43 @@ Input can be provided in two ways:
    - Acceptance Criteria coverage: [count]/[total]
    - Open questions/risks: [count]
 
-   🔗 Next step: Use this as input for REASONS Canvas generation:
+   Next step: Use this as input for REASONS Canvas generation:
       /spdd-reasons-canvas @spdd/analysis/<file-name>.md
    ```
 
-8. **Offer to proceed with REASONS Canvas generation**
+8. **Update the source story's YAML frontmatter** (Docs-as-Code automation)
+
+   This step closes the loop with `/spdd-story` by writing analysis-time metadata back onto the originating story file. Skip this step ONLY if the input was raw text with no `@` reference to a story file (in which case warn the user that downstream automation will lack a story anchor).
+
+   a. **Locate the source story file**:
+    - Use the first `@` reference in the input that resolves under `requirements/` (or any path containing a YAML frontmatter block whose `id` starts with `STORY-`).
+    - If multiple story files were referenced, update each of them with the same values.
+    - If none can be found, skip steps 8b–8d and emit the warning described above.
+
+   b. **Capture QA identity** by running `git config user.name`. Fall back to `$USER` and finally to `"unknown"` (with a warning), exactly as `/spdd-story` does.
+
+   c. **Mutate the frontmatter** in-place using the Read → StrReplace flow (do NOT rewrite the body or reorder keys). Apply these edits, leaving every other field untouched:
+    - `assignees.qa`: set ONLY if it is currently `null`; otherwise leave the existing value (this preserves the original analyst across re-runs).
+    - `timestamps.analyzed_at`: set to the current local time `YYYY-MM-DD HH:MM`. **Always overwrite** so the field reflects the most recent successful analysis.
+    - `status`: see step 8d.
+
+   d. **Prompt for status transition** using the **AskUserQuestion tool**:
+    > "Analysis complete. Advance status from `BACKLOG` to `IN_PROGRESS` and queue this story for development? (Y/n)"
+    - Default is `Y`.
+    - On `Y`: set `status: IN_PROGRESS` in the frontmatter.
+    - On `n`: leave `status: BACKLOG` and surface a hint in the summary that the user can re-run the prompt later by invoking `/spdd-analysis` again.
+    - If the current status is anything other than `BACKLOG` (e.g., already `IN_PROGRESS`, `BLOCKED`, `IN_TEST`), do NOT prompt and do NOT change it — analysis can be re-run at any stage without regressing state.
+
+   e. **Add an entry to the run summary** (Step 7c) showing exactly which fields were mutated, e.g.:
+
+   ```
+   Story metadata updated (requirements/[User-story-7]token-billing.md):
+      - assignees.qa: null → wendi.zhang
+      - timestamps.analyzed_at: null → 2026-05-06 17:05
+      - status: BACKLOG → IN_PROGRESS
+   ```
+
+9. **Offer to proceed with REASONS Canvas generation**
 
    > "The enriched context is ready. Would you like me to proceed with `/spdd-reasons-canvas` using this analysis as input?"
 
@@ -288,9 +320,13 @@ An enriched context document saved to `spdd/analysis/<file-name>.md` that transf
 - Always read ALL `@` referenced files completely
 - Always create `spdd/analysis/` directory if it does not exist
 - File name MUST follow the naming convention defined above
-- Use `GGQPA-XXX` if JIRA ticket number cannot be extracted from context
+- Use `SPDD-XXX` if JIRA ticket number cannot be extracted from context
 - Acceptance Criteria coverage MUST assess every AC from the requirement
 - Risk & Gap Analysis MUST surface any ambiguities — do NOT silently assume
+- When the input includes a `@` reference to a story under `requirements/`, the source story's YAML frontmatter MUST be updated per Step 8 (set `assignees.qa` if null, overwrite `timestamps.analyzed_at`, prompt for `BACKLOG → IN_PROGRESS`)
+- NEVER rewrite the story body or reorder frontmatter keys — only mutate the specific fields listed in Step 8c
+- NEVER overwrite an existing non-null `assignees.qa` — preserve the original analyst across re-runs
+- NEVER regress `status` (e.g., do not move `IN_PROGRESS` back to `BACKLOG`)
 
 **Context Integrity Guardrails**:
 
@@ -319,7 +355,7 @@ This command is the **pre-processing phase** of the SPDD workflow, bridging raw 
 │  │   + Risk & Gap Analysis (ambiguities, edge cases, risks)        │    │
 │  │   = Enriched Context (Business + Strategic + Risks)             │    │
 │  │                                                                 │    │
-│  │ Output: spdd/analysis/GGQPA-XXX-*-[Analysis]-*.md              │    │
+│  │ Output: spdd/analysis/SPDD-XXX-*-[Analysis]-*.md              │    │
 │  └────────────────────────────────────────────────────────────────┘    │
 │                              │                                          │
 │                              ▼                                          │
@@ -327,7 +363,7 @@ This command is the **pre-processing phase** of the SPDD workflow, bridging raw 
 │  ┌────────────────────────────────────────────────────────────────┐    │
 │  │ Enriched Context → REASONS Canvas Structured Prompt             │    │
 │  │                                                                 │    │
-│  │ Output: spdd/prompt/GGQPA-XXX-*.md (REASONS Canvas)           │    │
+│  │ Output: spdd/prompt/SPDD-XXX-*.md (REASONS Canvas)           │    │
 │  └────────────────────────────────────────────────────────────────┘    │
 │                              │                                          │
 │                              ▼                                          │

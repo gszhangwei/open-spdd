@@ -7,7 +7,7 @@ description: Generate code from a structured SPDD prompt file following the REAS
 
 Generate implementation code from a structured SPDD (Structured Prompt-Driven Development) prompt file, strictly following the Operations sequence and coding norms defined in the prompt.
 
-**Input**: The argument after `/spdd-generate` is the path to the structured prompt file (e.g., `@spdd/prompt/GGQPA-XXX-202602271430-[Feat]-api-create-agent-endpoint.md`).
+**Input**: The argument after `/spdd-generate` is the path to the structured prompt file (e.g., `@spdd/prompt/SPDD-XXX-202602271430-[Feat]-api-create-agent-endpoint.md`).
 
 **Steps**
 
@@ -135,6 +135,31 @@ Generate implementation code from a structured SPDD (Structured Prompt-Driven De
    - List of created files with their responsibilities
    - Any deviations or assumptions made
    - Validation results (pass/fail for each check)
+   - Story metadata mutations performed in Step 8 (assignee + refine-loop counter)
+
+8. **Update the source story's YAML frontmatter** (Docs-as-Code automation)
+
+   `/spdd-generate` is the natural pulse of the AI refine loop — every invocation against the same story counts as one iteration. Update the originating story file before reporting the summary.
+
+   a. **Locate the source story file**:
+    - Resolve from the prompt file's JIRA / story id (e.g., the prompt path `spdd/prompt/SPDD-003-...` ↔ story under `requirements/` whose frontmatter `id` shares the same trailing `STORY-{MODULE}-{SEQ}` or that the prompt was originally generated from).
+    - If the link is ambiguous, list the candidates and ask the user to confirm via the **AskUserQuestion tool**.
+    - If no story file can be matched (e.g., prompt was hand-written), skip steps 8b–8d and emit a warning so the team knows automation lacks an anchor.
+
+   b. **Capture Dev identity** by running `git config user.name` (fall back to `$USER`, then `"unknown"`).
+
+   c. **Mutate the frontmatter** in-place (Read → StrReplace, never rewrite the body or reorder keys):
+    - `assignees.dev`: set ONLY if it is currently `null`. Preserve the original developer across re-runs (multi-dev pairing should be expressed in `inline_defects`/`related_bugs` or via a comment, not by stomping this field).
+    - `quality_metrics.ai_refine_loops`: read the current integer and write back `current + 1`. Treat `null` or missing as `0` before incrementing.
+    - **Do NOT** touch `status`, `timestamps.developed_at`, or `timestamps.tested_at` — those transitions belong to Git hooks / CI (PR open → `IN_TEST` + `developed_at`; PR merge → `DONE` + `delivered_at`).
+
+   d. **Surface the mutations** in the run summary (Step 7), e.g.:
+
+   ```
+   Story metadata updated (requirements/[User-story-7]token-billing.md):
+      - assignees.dev: null → wendi.zhang
+      - quality_metrics.ai_refine_loops: 2 → 3
+   ```
 
 **Review & Iteration Loop**
 
@@ -190,6 +215,10 @@ Issue: "AgentService interface shouldn't contain business logic"
 - Always verify against Acceptance Criteria after generation
 - Always check for and fix linter errors after batch generation
 - Always commit prompt and code changes together
+- Always update the source story's YAML frontmatter per Step 8 (set `assignees.dev` if null, increment `quality_metrics.ai_refine_loops`)
+- NEVER overwrite an existing non-null `assignees.dev`
+- NEVER mutate `status`, `timestamps.developed_at`, `timestamps.tested_at`, or `timestamps.delivered_at` from this command — those transitions are owned by Git hooks / CI
+- NEVER reset or skip incrementing `quality_metrics.ai_refine_loops` even when generation fails partway — every full invocation is one loop
 
 **Integration with /spdd-context**
 
@@ -204,7 +233,7 @@ This command is the second phase of the SPDD workflow:
 │  ┌────────────────────────────────────────────────────────────────┐    │
 │  │ Requirement → Alignment → Abstraction → Structured Prompt      │    │
 │  │                                                                 │    │
-│  │ Output: spdd/prompt/GGQPA-XXX-*.md (REASONS Canvas)           │    │
+│  │ Output: spdd/prompt/SPDD-XXX-*.md (REASONS Canvas)           │    │
 │  └────────────────────────────────────────────────────────────────┘    │
 │                              │                                          │
 │                              ▼                                          │

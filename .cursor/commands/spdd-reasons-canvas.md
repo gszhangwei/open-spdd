@@ -406,15 +406,15 @@ Input can be provided in two ways:
 5. **Save the fully-populated structured prompt to file**
 
    a. **Derive file name**: `{JIRA}-{TIMESTAMP}-[{ACTION}]-{scope}-{description}.md`
-   - **JIRA**: Extract from business context if mentioned, otherwise use `GGQPA-XXX`
+   - **JIRA**: Extract from business context if mentioned, otherwise use `SPDD-XXX`
    - **TIMESTAMP**: `YYYYMMDDHHmm` (current time)
    - **ACTION**: Infer from business context - `[Feat]`, `[Fix]`, `[Refactor]`, `[Test]`, `[Docs]`
    - **scope**: Infer from context - `api`, `service`, `repo`, `bq`, `db`, `util` (optional)
    - **description**: Derive from business context - kebab-case, < 10 words
 
    Examples:
-   - `GGQPA-XXX-202603061530-[Feat]-api-user-registration.md`
-   - `GGQPA-169-202603061530-[Fix]-service-payment-validation.md`
+   - `SPDD-XXX-202603061530-[Feat]-api-user-registration.md`
+   - `SPDD-169-202603061530-[Fix]-service-payment-validation.md`
 
    b. **Create directory and write file**:
    - Ensure directory `spdd/prompt/` exists under the project root (create if not)
@@ -423,9 +423,9 @@ Input can be provided in two ways:
    c. **Show summary to user**:
 
    ```
-   ✅ REASONS-Canvas prompt generated and saved to `spdd/prompt/<file-name>.md`
+   REASONS-Canvas prompt generated and saved to `spdd/prompt/<file-name>.md`
 
-   📋 Generated sections:
+   Generated sections:
    - Requirements: [1-line summary]
    - Entities: [entity count] entities with relationships
    - Approach: [main approach summary]
@@ -451,7 +451,7 @@ A fully-populated, implementation-ready REASONS-Canvas structured prompt saved t
 - Do NOT leave placeholders or TODO items - generate complete, specific content
 - Do NOT implement code before user confirms the structured prompt
 - File name MUST follow SPDD naming convention defined above
-- Use `GGQPA-XXX` if JIRA ticket number cannot be extracted from context
+- Use `SPDD-XXX` if JIRA ticket number cannot be extracted from context
 - Always create `spdd/prompt/` directory if it does not exist
 - Read codebase context when needed to generate accurate entity models and implementation tasks
 - Ensure all sections are logically coherent and support the business requirement

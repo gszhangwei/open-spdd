@@ -33,7 +33,7 @@ Input can be provided in several ways:
 /spdd-api-test @src/main/java/com/example/controller/BillingController.java
 
 # Reference to acceptance criteria
-/spdd-api-test @spdd/prompt/GGQPA-XXX-202603131530-[Feat]-token-usage-billing.md
+/spdd-api-test @spdd/prompt/SPDD-XXX-202603131530-[Feat]-token-usage-billing.md
 
 # Reference to multiple files
 /spdd-api-test @src/controllers/ @requirements/api-spec.md
