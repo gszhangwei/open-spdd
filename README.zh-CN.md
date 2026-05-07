@@ -302,6 +302,7 @@ openspdd --tool github-copilot <command>
 | `spdd-story`       | 将功能需求拆解为符合 INVEST 原则的 Story，含验收标准 |
 | `spdd-code-review` | 对照 REASONS-Canvas 审查代码，检测意图偏移与约束违规 |
 | `spdd-api-test`    | 生成基于 cURL 的自包含 API 测试脚本                  |
+| `spdd-reverse`     | 对既有代码进行逆向工程，生成 REASONS-Canvas 提示，用于遗留代码接入 |
 
 ```bash
 # 列出所有可选命令
@@ -311,6 +312,7 @@ openspdd list --optional
 openspdd generate spdd-story
 openspdd generate spdd-code-review
 openspdd generate spdd-api-test
+openspdd generate spdd-reverse
 ```
 
 ## Plan vs REASONS Canvas：示例对比

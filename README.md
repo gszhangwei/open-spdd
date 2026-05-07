@@ -294,6 +294,7 @@ The following commands are available as beta — not installed by default, but c
 | `spdd-story`       | Decompose feature requirements into INVEST-compliant stories with acceptance criteria |
 | `spdd-code-review` | Review code against REASONS-Canvas, detecting intent drift and violations             |
 | `spdd-api-test`    | Generate self-contained shell scripts with cURL commands for API testing              |
+| `spdd-reverse`     | Reverse-engineer existing code into a REASONS-Canvas prompt for legacy onboarding     |
 
 ```bash
 # List all optional commands
@@ -303,6 +304,7 @@ openspdd list --optional
 openspdd generate spdd-story
 openspdd generate spdd-code-review
 openspdd generate spdd-api-test
+openspdd generate spdd-reverse
 ```
 
 ## Plan vs REASONS Canvas: An Example
