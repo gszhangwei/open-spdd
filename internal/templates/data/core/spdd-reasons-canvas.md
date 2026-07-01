@@ -1,5 +1,5 @@
 ---
-name: /spdd-reasons-canvas
+name: spdd-reasons-canvas
 id: spdd-reasons-canvas
 category: Development
 description: Generate REASONS-Canvas structured prompts from business context without external template

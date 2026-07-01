@@ -1,5 +1,5 @@
 ---
-name: /spdd-sync
+name: spdd-sync
 id: spdd-sync
 category: Development
 description: Sync code changes back to the structured SPDD prompt file following the REASONS Canvas methodology
