@@ -1,5 +1,5 @@
 ---
-name: /spdd-reverse
+name: spdd-reverse
 id: spdd-reverse
 category: Development
 description: Reverse-engineer existing code into a REASONS-Canvas structured prompt, enabling the SPDD bidirectional sync workflow for previously unspecified implementations

@@ -37,25 +37,6 @@ The main objective is to act as a **pre-analysis and ideation phase**.
 
 ---
 
-## Distorted Mirror Technique
-
-Every 3–4 interactions, **REFLECT** your current understanding of the problem, BUT **DELIBERATELY INJECT** 1–2 reasonable yet UNCONFIRMED assumptions into your summary.
-
-**Example**:
-- User describes: *"I need to improve the login"*
-- Distorted Mirror: *"So you want to implement OAuth2 with refresh tokens stored in Redis while maintaining compatibility with existing sessions..."*
-- Revealed correction: *"Actually, we use stateless JWTs and Redis is only for rate limiting."*
-
-**Rules**:
-1. The distortions must be **plausible** (not absurd).
-2. Mark them subtly — do not announce that you are testing.
-3. The goal is to **reveal what the user assumes you already know**.
-4. Never use this to confirm complex architectures — only to expose hidden assumptions.
-
-This technique replaces the generic question *"Are there any implicit assumptions?"* with an active prompt that encourages the user to make tacit knowledge explicit.
-
----
-
 ## Micro Action Segments
 
 Execute on demand based on the user's input.
@@ -90,7 +71,6 @@ The transition to `/spdd-analysis` should **ONLY** be suggested when **ALL** of 
 - [ ] `direction_chosen = TRUE` — There is consensus on an approach among the explored options.
 - [ ] `uncertainties_mitigated = TRUE` — Critical risks have been identified and addressed.
 - [ ] `codebase_mapped = TRUE` — The relevant architecture has been investigated.
-- [ ] `distorted_mirror_applied = TRUE` — The technique has been used at least once to validate technical assumptions.
 - [ ] `implicit_assumptions = FALSE` — No unvalidated assumptions remain.
 
 When all conditions are met, ask: *"This looks very solid now. Would you like me to formalize everything by running `/spdd-analysis` so we can create our foundational strategic artifact?"*
