@@ -4,7 +4,15 @@
 
 [Chinese](README.zh-CN.md) | [Design Philosophy](docs/design-philosophy.md)
 
-<img width="3664" height="2808" alt="star-history-202672" src="https://github.com/user-attachments/assets/f0675ced-68b6-4f1d-ab2d-ff244c34245f" />
+## Star History
+
+<a href="https://www.star-history.com/?repos=gszhangwei%2Fopen-spdd&type=date&legend=top-left">
+ <picture>
+   <source media="(prefers-color-scheme: dark)" srcset="https://api.star-history.com/chart?repos=gszhangwei/open-spdd&type=date&theme=dark&legend=top-left" />
+   <source media="(prefers-color-scheme: light)" srcset="https://api.star-history.com/chart?repos=gszhangwei/open-spdd&type=date&legend=top-left" />
+   <img alt="Star History Chart" src="https://api.star-history.com/chart?repos=gszhangwei/open-spdd&type=date&legend=top-left" />
+ </picture>
+</a>
 
 OpenSPDD is a methodology and cross-platform CLI tool for the AI coding era. It upgrades AI coding prompts from "disposable inputs" to "executable design contracts" with bidirectional synchronization between design and implementation.
 
