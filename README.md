@@ -4,6 +4,8 @@
 
 [Chinese](README.zh-CN.md) | [Design Philosophy](docs/design-philosophy.md)
 
+<img width="3664" height="2808" alt="star-history-202672" src="https://github.com/user-attachments/assets/f0675ced-68b6-4f1d-ab2d-ff244c34245f" />
+
 OpenSPDD is a methodology and cross-platform CLI tool for the AI coding era. It upgrades AI coding prompts from "disposable inputs" to "executable design contracts" with bidirectional synchronization between design and implementation.
 
 ## Why OpenSPDD?
