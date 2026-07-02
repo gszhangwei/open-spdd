@@ -191,24 +191,32 @@ Issue: "AgentService interface shouldn't contain business logic"
 - Always check for and fix linter errors after batch generation
 - Always commit prompt and code changes together
 
-**Integration with /spdd-context**
+**Integration with /spdd-analysis and /spdd-reasons-canvas**
 
-This command is the second phase of the SPDD workflow:
+This command is the third phase of the SPDD workflow:
 
 ```
 ┌─────────────────────────────────────────────────────────────────────────┐
 │                           SPDD Workflow                                  │
 ├─────────────────────────────────────────────────────────────────────────┤
 │                                                                          │
-│  Phase 1: /spdd-context                                                │
+│  Phase 1: /spdd-analysis                                               │
 │  ┌────────────────────────────────────────────────────────────────┐    │
-│  │ Requirement → Alignment → Abstraction → Structured Prompt      │    │
+│  │ Requirement → Alignment → Abstraction → Enriched Context       │    │
+│  │                                                                 │    │
+│  │ Output: Strategic context (business + domain + risks)          │    │
+│  └────────────────────────────────────────────────────────────────┘    │
+│                              │                                          │
+│                              ▼                                          │
+│  Phase 2: /spdd-reasons-canvas                                         │
+│  ┌────────────────────────────────────────────────────────────────┐    │
+│  │ Enriched Context → REASONS Canvas → Structured Prompt          │    │
 │  │                                                                 │    │
 │  │ Output: spdd/prompt/GGQPA-XXX-*.md (REASONS Canvas)           │    │
 │  └────────────────────────────────────────────────────────────────┘    │
 │                              │                                          │
 │                              ▼                                          │
-│  Phase 2: /spdd-generate                                               │
+│  Phase 3: /spdd-generate                                               │
 │  ┌────────────────────────────────────────────────────────────────┐    │
 │  │ Structured Prompt → Validate → Generate → Verify → Code        │    │
 │  │                                                                 │    │
@@ -216,7 +224,7 @@ This command is the second phase of the SPDD workflow:
 │  └────────────────────────────────────────────────────────────────┘    │
 │                              │                                          │
 │                              ▼                                          │
-│  Phase 3: Review & Iteration                                            │
+│  Phase 4: Review & Iteration                                            │
 │  ┌────────────────────────────────────────────────────────────────┐    │
 │  │ Issue Found → Update Prompt → Regenerate → Commit Together     │    │
 │  │                                                                 │    │
