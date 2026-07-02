@@ -6,6 +6,16 @@
 
 OpenSPDD 是一套面向 AI 编码时代的结构化提示词驱动开发方法论及跨平台 CLI 工具。它将 AI 编码的 Prompt 从"一次性输入"升级为"可执行的设计契约"，实现设计与实现的双向同步。
 
+## Star History
+
+<a href="https://www.star-history.com/?repos=gszhangwei%2Fopen-spdd&type=date&legend=top-left">
+ <picture>
+   <source media="(prefers-color-scheme: dark)" srcset="https://api.star-history.com/chart?repos=gszhangwei/open-spdd&type=date&theme=dark&legend=top-left" />
+   <source media="(prefers-color-scheme: light)" srcset="https://api.star-history.com/chart?repos=gszhangwei/open-spdd&type=date&legend=top-left" />
+   <img alt="Star History Chart" src="https://api.star-history.com/chart?repos=gszhangwei/open-spdd&type=date&legend=top-left" />
+ </picture>
+</a>
+
 ## 为什么需要 OpenSPDD？
 
 现有的 AI 编码工具虽然也会生成 plan 文档或执行计划，但这些文档存在根本性的局限：
