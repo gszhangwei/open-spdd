@@ -93,7 +93,7 @@ func TestFlatMarkdownStrategy_NonOpenCode_PreservesFrontmatterName(t *testing.T)
 	}
 	content := string(raw)
 
-	if !strings.Contains(content, "name: /spdd-analysis") {
+	if !strings.Contains(content, "name: spdd-analysis") {
 		t.Fatalf("non-OpenCode generation should preserve name field")
 	}
 }

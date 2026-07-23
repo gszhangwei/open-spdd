@@ -263,10 +263,12 @@ openspdd --tool codex <command>
 | -------------- | ------------------------------------------------------------- | -------------------------- |
 | Cursor         | `.cursor/`, `.cursorrules`                                    | `.cursor/commands/`        |
 | Claude Code    | `.claude/`, `CLAUDE.md`                                       | `.claude/commands/`        |
-| Antigravity    | `.antigravity/`                                               | `.antigravity/commands/`   |
+| Antigravity    | `.antigravity/`                                               | `.agents/workflows/`       |
 | GitHub Copilot | `.github/copilot-instructions.md`, `.github/copilot-prompts/` | `.github/copilot-prompts/` |
 | OpenCode       | `.opencode/`, `opencode.json`                                 | `.opencode/commands/`      |
 | Codex          | `.codex/`, `.codex/config.toml`                               | `.agents/skills/`          |
+
+**Antigravity migration**: after upgrading, regenerate Antigravity workflows (`openspdd --tool antigravity generate --all`). Files previously written under `.antigravity/commands/` are not moved automatically.
 
 OpenCode command naming follows the markdown filename (for example, `spdd-analysis.md` maps to `/spdd-analysis`). To avoid command alias conflicts in OpenCode, generated OpenCode command files intentionally omit frontmatter `name`.
 
@@ -311,6 +313,7 @@ The following commands are available as beta — not installed by default, but c
 
 | Command            | Description                                                                           |
 | ------------------ | ------------------------------------------------------------------------------------- |
+| `spdd-explore`     | Read-only explore mode to clarify ideas and assumptions before `/spdd-analysis`       |
 | `spdd-story`       | Decompose feature requirements into INVEST-compliant stories with acceptance criteria |
 | `spdd-code-review` | Review code against REASONS-Canvas, detecting intent drift and violations             |
 | `spdd-api-test`    | Generate self-contained shell scripts with cURL commands for API testing              |
@@ -321,6 +324,7 @@ The following commands are available as beta — not installed by default, but c
 openspdd list --optional
 
 # Install a specific optional command
+openspdd generate spdd-explore
 openspdd generate spdd-story
 openspdd generate spdd-code-review
 openspdd generate spdd-api-test

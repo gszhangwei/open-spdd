@@ -109,8 +109,8 @@ func TestDefaultDetector_Detect_AntigravityEnvironment(t *testing.T) {
 	if result.ToolType != detector.Antigravity {
 		t.Errorf("Detect() ToolType = %v, want %v", result.ToolType, detector.Antigravity)
 	}
-	if result.ConfigPath != filepath.Join(tempDir, ".antigravity/commands") {
-		t.Errorf("Detect() ConfigPath = %v, want %v", result.ConfigPath, filepath.Join(tempDir, ".antigravity/commands"))
+	if result.ConfigPath != filepath.Join(tempDir, ".agents/workflows") {
+		t.Errorf("Detect() ConfigPath = %v, want %v", result.ConfigPath, filepath.Join(tempDir, ".agents/workflows"))
 	}
 }
 
@@ -421,7 +421,7 @@ func TestDefaultDetector_GetConfigDirPath(t *testing.T) {
 			name:       "Antigravity config path",
 			tool:       detector.Antigravity,
 			workingDir: "/project",
-			want:       "/project/.antigravity/commands",
+			want:       "/project/.agents/workflows",
 		},
 		{
 			name:       "GitHubCopilot config path",

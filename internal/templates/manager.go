@@ -160,6 +160,8 @@ func (m *EmbeddedTemplateManager) ListAll() ([]TemplateMeta, error) {
 }
 
 // GetByName returns a template by its name (case-insensitive).
+// A single leading "/" is trimmed for compatibility with slash-prefixed lookups
+// (e.g. "/spdd-analysis" matches name/id "spdd-analysis").
 func (m *EmbeddedTemplateManager) GetByName(name string) (TemplateMeta, error) {
 	templates, err := m.ListAll()
 	if err != nil {
@@ -167,8 +169,11 @@ func (m *EmbeddedTemplateManager) GetByName(name string) (TemplateMeta, error) {
 	}
 
 	nameLower := strings.ToLower(name)
+	normalized := strings.TrimPrefix(nameLower, "/")
 	for _, t := range templates {
-		if strings.ToLower(t.Name) == nameLower || strings.ToLower(t.ID) == nameLower {
+		tName := strings.ToLower(t.Name)
+		tID := strings.ToLower(t.ID)
+		if tName == nameLower || tID == nameLower || tName == normalized || tID == normalized {
 			return t, nil
 		}
 	}

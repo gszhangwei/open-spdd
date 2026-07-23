@@ -282,6 +282,102 @@ func TestEmbeddedTemplateManager_GetByName_NotFound(t *testing.T) {
 	}
 }
 
+func TestEmbeddedTemplateManager_GetByName_SlashPrefixedCompatibility(t *testing.T) {
+	manager := templates.NewEmbeddedTemplateManager()
+
+	slashFree, err := manager.GetByName("spdd-analysis")
+	if err != nil {
+		t.Fatalf("GetByName('spdd-analysis') error = %v", err)
+	}
+	slashPrefixed, err := manager.GetByName("/spdd-analysis")
+	if err != nil {
+		t.Fatalf("GetByName('/spdd-analysis') error = %v", err)
+	}
+	if slashFree.ID != slashPrefixed.ID {
+		t.Errorf("slash-free and slash-prefixed lookup IDs differ: %q vs %q", slashFree.ID, slashPrefixed.ID)
+	}
+	if slashFree.ID != "spdd-analysis" {
+		t.Errorf("GetByName() ID = %v, want spdd-analysis", slashFree.ID)
+	}
+}
+
+func TestEmbeddedTemplateManager_ListOptional_IncludesExplore(t *testing.T) {
+	manager := templates.NewEmbeddedTemplateManager()
+	tmpls, err := manager.ListOptional()
+	if err != nil {
+		t.Fatalf("ListOptional() error = %v", err)
+	}
+
+	found := false
+	for _, tmpl := range tmpls {
+		if tmpl.ID == "spdd-explore" {
+			found = true
+			if tmpl.Name != "spdd-explore" {
+				t.Errorf("spdd-explore Name = %q, want spdd-explore (slash-free)", tmpl.Name)
+			}
+			if strings.HasPrefix(tmpl.Name, "/") {
+				t.Errorf("spdd-explore Name must not start with /: %q", tmpl.Name)
+			}
+			break
+		}
+	}
+	if !found {
+		t.Error("ListOptional() should include spdd-explore")
+	}
+
+	core, err := manager.ListCore()
+	if err != nil {
+		t.Fatalf("ListCore() error = %v", err)
+	}
+	for _, tmpl := range core {
+		if tmpl.ID == "spdd-explore" {
+			t.Error("ListCore() must not include spdd-explore")
+		}
+	}
+
+	available, err := manager.ListAvailable(detector.Cursor)
+	if err != nil {
+		t.Fatalf("ListAvailable(Cursor) error = %v", err)
+	}
+	for _, tmpl := range available {
+		if tmpl.ID == "spdd-explore" {
+			t.Error("ListAvailable() must not include optional spdd-explore")
+		}
+	}
+
+	explore, err := manager.GetByName("/spdd-explore")
+	if err != nil {
+		t.Fatalf("GetByName('/spdd-explore') error = %v", err)
+	}
+	if explore.ID != "spdd-explore" {
+		t.Errorf("GetByName('/spdd-explore') ID = %v, want spdd-explore", explore.ID)
+	}
+}
+
+func TestEmbeddedTemplateManager_CoreAndOptionalNamesAreSlashFree(t *testing.T) {
+	manager := templates.NewEmbeddedTemplateManager()
+
+	core, err := manager.ListCore()
+	if err != nil {
+		t.Fatalf("ListCore() error = %v", err)
+	}
+	for _, tmpl := range core {
+		if strings.HasPrefix(tmpl.Name, "/") {
+			t.Errorf("core template %s Name must be slash-free, got %q", tmpl.ID, tmpl.Name)
+		}
+	}
+
+	optional, err := manager.ListOptional()
+	if err != nil {
+		t.Fatalf("ListOptional() error = %v", err)
+	}
+	for _, tmpl := range optional {
+		if strings.HasPrefix(tmpl.Name, "/") {
+			t.Errorf("optional template %s Name must be slash-free, got %q", tmpl.ID, tmpl.Name)
+		}
+	}
+}
+
 func TestEmbeddedTemplateManager_Generate_Success(t *testing.T) {
 	tempDir := t.TempDir()
 	targetPath := filepath.Join(tempDir, "test-output.md")

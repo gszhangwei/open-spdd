@@ -82,7 +82,7 @@ func TestAIToolType_GetConfigDir(t *testing.T) {
 		{
 			name:     "Antigravity config directory",
 			toolType: detector.Antigravity,
-			want:     ".antigravity/commands",
+			want:     ".agents/workflows",
 		},
 		{
 			name:     "GitHubCopilot config directory",

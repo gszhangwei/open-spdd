@@ -271,10 +271,12 @@ openspdd --tool codex <command>
 | -------------- | ------------------------------------------------------------- | -------------------------- |
 | Cursor         | `.cursor/`, `.cursorrules`                                    | `.cursor/commands/`        |
 | Claude Code    | `.claude/`, `CLAUDE.md`                                       | `.claude/commands/`        |
-| Antigravity    | `.antigravity/`                                               | `.antigravity/commands/`   |
+| Antigravity    | `.antigravity/`                                               | `.agents/workflows/`       |
 | GitHub Copilot | `.github/copilot-instructions.md`, `.github/copilot-prompts/` | `.github/copilot-prompts/` |
 | OpenCode       | `.opencode/`, `opencode.json`                                 | `.opencode/commands/`      |
 | Codex          | `.codex/`, `.codex/config.toml`                               | `.agents/skills/`          |
+
+**Antigravity 迁移说明**：升级后请重新生成 Antigravity workflows（`openspdd --tool antigravity generate --all`）。此前写入 `.antigravity/commands/` 的文件不会自动迁移。
 
 OpenCode 的命令名由 Markdown 文件名决定（例如 `spdd-analysis.md` 对应 `/spdd-analysis`）。为避免 OpenCode 中的命令别名冲突，生成到 OpenCode 的命令文件会有意省略 frontmatter `name` 字段。
 
@@ -319,6 +321,7 @@ Codex 会以项目级 skill 包的形式生成命令模板，输出到 `.agents/
 
 | 命令               | 描述                                                 |
 | ------------------ | ---------------------------------------------------- |
+| `spdd-explore`     | 只读探索模式，在进入 `/spdd-analysis` 前澄清想法与隐含假设 |
 | `spdd-story`       | 将功能需求拆解为符合 INVEST 原则的 Story，含验收标准 |
 | `spdd-code-review` | 对照 REASONS-Canvas 审查代码，检测意图偏移与约束违规 |
 | `spdd-api-test`    | 生成基于 cURL 的自包含 API 测试脚本                  |
@@ -329,6 +332,7 @@ Codex 会以项目级 skill 包的形式生成命令模板，输出到 `.agents/
 openspdd list --optional
 
 # 安装特定可选命令
+openspdd generate spdd-explore
 openspdd generate spdd-story
 openspdd generate spdd-code-review
 openspdd generate spdd-api-test

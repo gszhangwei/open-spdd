@@ -1,5 +1,5 @@
 ---
-name: /spdd-generate
+name: spdd-generate
 id: spdd-generate
 category: Development
 description: Generate code from a structured SPDD prompt file following the REASONS Canvas methodology

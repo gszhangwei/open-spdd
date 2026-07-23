@@ -180,7 +180,7 @@ func TestParseFrontmatter_EmptyContent(t *testing.T) {
 
 func TestParseFrontmatter_RealWorldTemplate(t *testing.T) {
 	content := `---
-name: /spdd-generate
+name: spdd-generate
 id: spdd-generate
 category: Development
 description: Generate code from a structured SPDD prompt file following the REASONS Canvas methodology
@@ -192,8 +192,8 @@ Generate implementation code from a structured SPDD (Structured Prompt-Driven De
 
 	meta := templates.ParseFrontmatter(content)
 
-	if meta.Name != "/spdd-generate" {
-		t.Errorf("ParseFrontmatter() Name = %v, want %v", meta.Name, "/spdd-generate")
+	if meta.Name != "spdd-generate" {
+		t.Errorf("ParseFrontmatter() Name = %v, want %v", meta.Name, "spdd-generate")
 	}
 	if meta.ID != "spdd-generate" {
 		t.Errorf("ParseFrontmatter() ID = %v, want %v", meta.ID, "spdd-generate")

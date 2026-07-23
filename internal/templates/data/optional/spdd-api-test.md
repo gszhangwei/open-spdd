@@ -1,5 +1,5 @@
 ---
-name: /spdd-api-test
+name: spdd-api-test
 id: spdd-api-test
 category: Testing
 description: Generate a self-contained shell script with cURL commands to test API endpoints based on generated code and acceptance criteria
