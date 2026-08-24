@@ -1,5 +1,5 @@
 ---
-name: /spdd-analysis
+name: spdd-analysis
 id: spdd-analysis
 category: Development
 description: Analyze business requirements against codebase context at a strategic level, producing enriched context (business + domain concepts + strategic direction + risks) for REASONS Canvas generation

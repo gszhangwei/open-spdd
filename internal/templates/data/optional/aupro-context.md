@@ -1,5 +1,5 @@
 ---
-name: /aupro-context
+name: aupro-context
 id: aupro-context
 category: Development
 description: Generate structured development context from a requirement using Aupro, save to file, then implement

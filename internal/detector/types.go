@@ -41,7 +41,7 @@ func (t AIToolType) GetConfigDir() string {
 	case ClaudeCode:
 		return ".claude/commands"
 	case Antigravity:
-		return ".antigravity/commands"
+		return ".agents/workflows"
 	case GitHubCopilot:
 		return ".github/copilot-prompts"
 	case OpenCode:

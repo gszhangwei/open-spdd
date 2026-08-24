@@ -1,5 +1,5 @@
 ---
-name: /spdd-code-review
+name: spdd-code-review
 id: spdd-code-review
 category: Development
 description: Review AI-generated code against REASONS-Canvas structured prompts, detecting intent drift, safeguard violations, and scope boundary issues to reduce human reviewer cognitive load
