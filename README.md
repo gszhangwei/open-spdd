@@ -402,6 +402,8 @@ go test ./tests/detector/...
 go test ./tests/templates/...
 ```
 
+CI runs `gofmt`, `go vet` and `go test ./...` on every push to `main` and every pull request (`.github/workflows/ci.yaml`).
+
 ## License
 
 [MIT License](LICENSE)

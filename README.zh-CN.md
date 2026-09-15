@@ -410,6 +410,8 @@ go test ./tests/detector/...
 go test ./tests/templates/...
 ```
 
+CI 会在每次推送到 `main` 和每个 Pull Request 上运行 `gofmt`、`go vet` 和 `go test ./...`（见 `.github/workflows/ci.yaml`）。
+
 ## 许可证
 
 [MIT License](LICENSE)
