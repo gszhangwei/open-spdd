@@ -22,7 +22,7 @@ Creates the necessary directory structure for storing command templates.`,
 			tool := selectToolInteractively()
 			if tool == detector.Unknown {
 				uiRenderer.RenderError("No tool selected")
-				return
+				os.Exit(1)
 			}
 			detectedResult = detector.DetectResult{
 				ToolType:   tool,
