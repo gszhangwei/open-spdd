@@ -1,6 +1,7 @@
 package cmd
 
 import (
+	"fmt"
 	"os"
 	"strings"
 
@@ -35,6 +36,10 @@ Auto-detects your current environment and manages command templates.`,
 		workingDir, _ := os.Getwd()
 
 		if toolFlag != "" {
+			if err := ValidateToolFlag(toolFlag); err != nil {
+				uiRenderer.RenderError(err.Error())
+				os.Exit(1)
+			}
 			toolType := ParseToolFlag(toolFlag)
 			detectedResult = detector.DetectResult{
 				ToolType:   toolType,
@@ -48,8 +53,21 @@ Auto-detects your current environment and manages command templates.`,
 	},
 }
 
+// acceptedTools is the canonical list shown in --help and in the error for an
+// unknown --tool value. Keep it in sync with ParseToolFlag.
+const acceptedTools = "cursor, claude-code, antigravity, github-copilot, opencode, codex"
+
 func init() {
-	rootCmd.PersistentFlags().StringVarP(&toolFlag, "tool", "t", "", "Manually specify tool type (cursor, claude-code, antigravity, github-copilot, opencode, codex)")
+	rootCmd.PersistentFlags().StringVarP(&toolFlag, "tool", "t", "", "Manually specify tool type ("+acceptedTools+")")
+}
+
+// ValidateToolFlag returns an error when a non-empty --tool value is not a
+// known tool (or alias). An empty value is valid: it means "auto-detect".
+func ValidateToolFlag(flag string) error {
+	if flag == "" || ParseToolFlag(flag) != detector.Unknown {
+		return nil
+	}
+	return fmt.Errorf("unknown tool %q (accepted: %s)", flag, acceptedTools)
 }
 
 func SetVersion(v string) {
