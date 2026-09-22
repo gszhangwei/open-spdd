@@ -263,12 +263,16 @@ openspdd --tool codex <command>
 | -------------- | ------------------------------------------------------------- | -------------------------- |
 | Cursor         | `.cursor/`, `.cursorrules`                                    | `.cursor/commands/`        |
 | Claude Code    | `.claude/`, `CLAUDE.md`                                       | `.claude/commands/`        |
-| Antigravity    | `.antigravity/`                                               | `.antigravity/commands/`   |
+| Antigravity    | `.agents/`, `AGENTS.md`, `GEMINI.md`, `.antigravity/`          | `.agents/skills/`          |
 | GitHub Copilot | `.github/copilot-instructions.md`, `.github/copilot-prompts/` | `.github/copilot-prompts/` |
 | OpenCode       | `.opencode/`, `opencode.json`                                 | `.opencode/commands/`      |
 | Codex          | `.codex/`, `.codex/config.toml`                               | `.agents/skills/`          |
 
 OpenCode command naming follows the markdown filename (for example, `spdd-analysis.md` maps to `/spdd-analysis`). To avoid command alias conflicts in OpenCode, generated OpenCode command files intentionally omit frontmatter `name`.
+
+### Antigravity Skills
+
+Antigravity generates project-scoped skill bundles under `.agents/skills/<id>/SKILL.md` adhering to the [agentskills.io](https://agentskills.io/) standard and Google Antigravity Customization Specification. Inside the Antigravity CLI (`agy`) or Antigravity IDE, invoke SPDD commands via `/spdd-analysis`, `/spdd-reasons-canvas`, etc., or rely on the agent's dynamic skill discovery based on task context. For global availability across all projects, skills can be symlinked into `~/.gemini/skills/<id>/`.
 
 ### Codex Skills
 

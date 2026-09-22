@@ -109,8 +109,65 @@ func TestDefaultDetector_Detect_AntigravityEnvironment(t *testing.T) {
 	if result.ToolType != detector.Antigravity {
 		t.Errorf("Detect() ToolType = %v, want %v", result.ToolType, detector.Antigravity)
 	}
-	if result.ConfigPath != filepath.Join(tempDir, ".antigravity/commands") {
-		t.Errorf("Detect() ConfigPath = %v, want %v", result.ConfigPath, filepath.Join(tempDir, ".antigravity/commands"))
+	if result.ConfigPath != filepath.Join(tempDir, ".agents/skills") {
+		t.Errorf("Detect() ConfigPath = %v, want %v", result.ConfigPath, filepath.Join(tempDir, ".agents/skills"))
+	}
+}
+
+func TestDefaultDetector_Detect_AntigravityEnvironment_AgentsDir(t *testing.T) {
+	tempDir := t.TempDir()
+	agentsDir := filepath.Join(tempDir, ".agents")
+	if err := os.MkdirAll(agentsDir, 0755); err != nil {
+		t.Fatal(err)
+	}
+
+	det := detector.NewDefaultDetector()
+	result := det.Detect(tempDir)
+
+	if !result.IsValid {
+		t.Error("Detect() should return valid result for .agents directory")
+	}
+	if result.ToolType != detector.Antigravity {
+		t.Errorf("Detect() ToolType = %v, want %v", result.ToolType, detector.Antigravity)
+	}
+	if result.ConfigPath != filepath.Join(tempDir, ".agents/skills") {
+		t.Errorf("Detect() ConfigPath = %v, want %v", result.ConfigPath, filepath.Join(tempDir, ".agents/skills"))
+	}
+}
+
+func TestDefaultDetector_Detect_AntigravityEnvironment_AgentsMd(t *testing.T) {
+	tempDir := t.TempDir()
+	agentsMd := filepath.Join(tempDir, "AGENTS.md")
+	if err := os.WriteFile(agentsMd, []byte("# Agents"), 0644); err != nil {
+		t.Fatal(err)
+	}
+
+	det := detector.NewDefaultDetector()
+	result := det.Detect(tempDir)
+
+	if !result.IsValid {
+		t.Error("Detect() should return valid result for AGENTS.md file")
+	}
+	if result.ToolType != detector.Antigravity {
+		t.Errorf("Detect() ToolType = %v, want %v", result.ToolType, detector.Antigravity)
+	}
+}
+
+func TestDefaultDetector_Detect_AntigravityEnvironment_GeminiMd(t *testing.T) {
+	tempDir := t.TempDir()
+	geminiMd := filepath.Join(tempDir, "GEMINI.md")
+	if err := os.WriteFile(geminiMd, []byte("# Gemini"), 0644); err != nil {
+		t.Fatal(err)
+	}
+
+	det := detector.NewDefaultDetector()
+	result := det.Detect(tempDir)
+
+	if !result.IsValid {
+		t.Error("Detect() should return valid result for GEMINI.md file")
+	}
+	if result.ToolType != detector.Antigravity {
+		t.Errorf("Detect() ToolType = %v, want %v", result.ToolType, detector.Antigravity)
 	}
 }
 
@@ -421,7 +478,7 @@ func TestDefaultDetector_GetConfigDirPath(t *testing.T) {
 			name:       "Antigravity config path",
 			tool:       detector.Antigravity,
 			workingDir: "/project",
-			want:       "/project/.antigravity/commands",
+			want:       "/project/.agents/skills",
 		},
 		{
 			name:       "GitHubCopilot config path",

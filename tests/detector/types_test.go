@@ -82,7 +82,7 @@ func TestAIToolType_GetConfigDir(t *testing.T) {
 		{
 			name:     "Antigravity config directory",
 			toolType: detector.Antigravity,
-			want:     ".antigravity/commands",
+			want:     ".agents/skills",
 		},
 		{
 			name:     "GitHubCopilot config directory",
@@ -134,7 +134,7 @@ func TestAIToolType_GetSignatureFiles(t *testing.T) {
 		{
 			name:     "Antigravity signature files",
 			toolType: detector.Antigravity,
-			want:     []string{".antigravity"},
+			want:     []string{".agents", "AGENTS.md", "GEMINI.md", ".antigravity"},
 		},
 		{
 			name:     "GitHubCopilot signature files",
