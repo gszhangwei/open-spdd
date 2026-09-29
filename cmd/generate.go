@@ -23,11 +23,11 @@ var generateCmd = &cobra.Command{
 	Long: `Generate a command template file to the detected AI tool's config directory.
 If no template name is specified, an interactive selection will be shown.`,
 	Run: func(cmd *cobra.Command, args []string) {
-		if outputFlag == "" && toolFlag == "" {
+		if ShouldPromptForTool(outputFlag, toolFlag, detectedResult) {
 			tool := selectToolInteractively()
 			if tool == detector.Unknown {
 				uiRenderer.RenderError("No tool selected. Use --output or --tool flag.")
-				return
+				os.Exit(1)
 			}
 			workingDir, _ := os.Getwd()
 			detectedResult = detector.DetectResult{
@@ -64,6 +64,13 @@ func init() {
 	generateCmd.Flags().StringVarP(&outputFlag, "output", "o", "", "Custom output directory (overrides detection)")
 	generateCmd.Flags().BoolVar(&allowImplicitFlag, "allow-implicit", false, "Allow implicit invocation of generated Codex skills (Codex only)")
 	rootCmd.AddCommand(generateCmd)
+}
+
+// ShouldPromptForTool reports whether generate must ask the user to pick a
+// tool: only when neither --output nor --tool was given AND auto-detection
+// found nothing. Mirrors the check `init` already performs.
+func ShouldPromptForTool(outputFlag, toolFlag string, detected detector.DetectResult) bool {
+	return outputFlag == "" && toolFlag == "" && !detected.IsValid
 }
 
 func determineTargetDir() string {
