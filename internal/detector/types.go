@@ -41,7 +41,7 @@ func (t AIToolType) GetConfigDir() string {
 	case ClaudeCode:
 		return ".claude/commands"
 	case Antigravity:
-		return ".antigravity/commands"
+		return ".agents/skills"
 	case GitHubCopilot:
 		return ".github/copilot-prompts"
 	case OpenCode:
@@ -61,7 +61,7 @@ func (t AIToolType) GetSignatureFiles() []string {
 	case ClaudeCode:
 		return []string{".claude", "CLAUDE.md"}
 	case Antigravity:
-		return []string{".antigravity"}
+		return []string{".agents", "AGENTS.md", "GEMINI.md", ".antigravity"}
 	case GitHubCopilot:
 		return []string{".github/copilot-instructions.md", ".github/copilot-prompts"}
 	case OpenCode:

@@ -271,12 +271,16 @@ openspdd --tool codex <command>
 | -------------- | ------------------------------------------------------------- | -------------------------- |
 | Cursor         | `.cursor/`, `.cursorrules`                                    | `.cursor/commands/`        |
 | Claude Code    | `.claude/`, `CLAUDE.md`                                       | `.claude/commands/`        |
-| Antigravity    | `.antigravity/`                                               | `.antigravity/commands/`   |
+| Antigravity    | `.agents/`, `AGENTS.md`, `GEMINI.md`, `.antigravity/`          | `.agents/skills/`          |
 | GitHub Copilot | `.github/copilot-instructions.md`, `.github/copilot-prompts/` | `.github/copilot-prompts/` |
 | OpenCode       | `.opencode/`, `opencode.json`                                 | `.opencode/commands/`      |
 | Codex          | `.codex/`, `.codex/config.toml`                               | `.agents/skills/`          |
 
 OpenCode 的命令名由 Markdown 文件名决定（例如 `spdd-analysis.md` 对应 `/spdd-analysis`）。为避免 OpenCode 中的命令别名冲突，生成到 OpenCode 的命令文件会有意省略 frontmatter `name` 字段。
+
+### Antigravity Skills
+
+Antigravity 会以项目级 skill 包的形式生成命令模板，输出到 `.agents/skills/<id>/SKILL.md`（遵循 [agentskills.io](https://agentskills.io/) 标准与 Google Antigravity 自定义规范），而不是扁平的命令文件。在 Antigravity CLI (`agy`) 或 Antigravity IDE 中，可通过 `/spdd-analysis`、`/spdd-reasons-canvas` 等斜杠命令调用，或由 Agent 根据任务上下文动态激活。如需跨项目全局使用，可将 skill 目录软链接至 `~/.gemini/skills/<id>/`。
 
 ### Codex Skills
 

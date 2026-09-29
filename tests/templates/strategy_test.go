@@ -24,12 +24,19 @@ func TestStrategyFor_CodexReturnsCodexStrategy(t *testing.T) {
 	}
 }
 
+func TestStrategyFor_AntigravityReturnsAntigravityStrategy(t *testing.T) {
+	mgr := templates.NewEmbeddedTemplateManager()
+	got := templates.StrategyFor(detector.Antigravity, mgr)
+	if _, ok := got.(*templates.AntigravitySkillStrategy); !ok {
+		t.Errorf("StrategyFor(Antigravity) = %T, want *templates.AntigravitySkillStrategy", got)
+	}
+}
+
 func TestStrategyFor_FlatMarkdownToolsReturnFlatStrategy(t *testing.T) {
 	mgr := templates.NewEmbeddedTemplateManager()
 	tools := []detector.AIToolType{
 		detector.Cursor,
 		detector.ClaudeCode,
-		detector.Antigravity,
 		detector.OpenCode,
 	}
 	for _, tool := range tools {
@@ -58,7 +65,7 @@ func TestStrategyRegistry_ContainsExpectedTools(t *testing.T) {
 	}
 	sort.Strings(got)
 
-	want := []string{string(detector.Codex), string(detector.GitHubCopilot)}
+	want := []string{string(detector.Antigravity), string(detector.Codex), string(detector.GitHubCopilot)}
 	sort.Strings(want)
 
 	if len(got) != len(want) {
