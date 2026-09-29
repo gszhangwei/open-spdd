@@ -1,6 +1,7 @@
 package cmd_test
 
 import (
+	"strings"
 	"testing"
 
 	"github.com/gszhangwei/open-spdd/cmd"
@@ -167,6 +168,33 @@ func TestParseToolFlag_AllValidToolsReturnValidType(t *testing.T) {
 			result := cmd.ParseToolFlag(tool)
 			if result == detector.Unknown {
 				t.Errorf("ParseToolFlag(%q) returned Unknown, expected valid type", tool)
+			}
+		})
+	}
+}
+
+func TestValidateToolFlag(t *testing.T) {
+	tests := []struct {
+		input   string
+		wantErr bool
+	}{
+		{"", false},
+		{"cursor", false},
+		{"Claude-Code", false},
+		{"copilot", false},
+		{"codex", false},
+		{"bogus", true},
+		{"vscode", true},
+	}
+
+	for _, tt := range tests {
+		t.Run(tt.input, func(t *testing.T) {
+			err := cmd.ValidateToolFlag(tt.input)
+			if (err != nil) != tt.wantErr {
+				t.Fatalf("ValidateToolFlag(%q) error = %v, wantErr %v", tt.input, err, tt.wantErr)
+			}
+			if err != nil && !strings.Contains(err.Error(), "accepted: cursor, claude-code") {
+				t.Errorf("ValidateToolFlag(%q) error %q should list the accepted tools", tt.input, err)
 			}
 		})
 	}
