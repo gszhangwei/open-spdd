@@ -2,6 +2,7 @@ package cmd
 
 import (
 	"os"
+	"strconv"
 
 	"github.com/spf13/cobra"
 
@@ -106,7 +107,7 @@ func generateAllTemplates(_ string) {
 		}
 	}
 
-	uiRenderer.RenderSuccess("Generation complete: " + formatCount(successCount, "succeeded") + ", " + formatCount(failCount, "failed"))
+	uiRenderer.RenderSuccess("Generation complete: " + FormatCount(successCount, "succeeded") + ", " + FormatCount(failCount, "failed"))
 }
 
 func generateSingleTemplate(name string) {
@@ -161,13 +162,8 @@ func generateOneViaStrategy(tmpl templates.TemplateMeta) {
 	}
 }
 
-func formatCount(count int, label string) string {
-	if count == 1 {
-		return "1 " + label[:len(label)-2]
-	}
-	return formatInt(count) + " " + label
-}
-
-func formatInt(n int) string {
-	return string(rune('0'+n/10)) + string(rune('0'+n%10))
+// FormatCount renders "<n> <label>" for the generation summary. The labels are
+// past-tense verbs ("succeeded", "failed"), so they need no pluralization.
+func FormatCount(count int, label string) string {
+	return strconv.Itoa(count) + " " + label
 }
